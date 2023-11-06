@@ -143,7 +143,6 @@ function moduleSuffixToLayers(moduleName: string): {
   }
 
   return { layer: ModuleLayers.END_USER, sublayer: EndUserLayerSublayers.END_USER };
-  throw new Error(`No module type found for module "${moduleName}"`);
 }
 
 if (process.argv.length < 3) {
@@ -454,10 +453,9 @@ function validateGraph(graph: Graph) {
 }
 
 const graph = getGraph();
+// eslint-disable-next-line no-console
 console.log(`Generated LPG with ${graph.elements.nodes.length} nodes and ${graph.elements.edges.length} edges.`);
 
 fs.writeFileSync('graph.json', JSON.stringify(graph, null, 4));
 
 validateGraph(graph);
-
-// TODO: add extra dimension to graph with module layers (end-user, core, foundational)
