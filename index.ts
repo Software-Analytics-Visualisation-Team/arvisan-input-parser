@@ -26,6 +26,8 @@ enum FoundationLayerSublayers {
   LIBRARY = 'Library',
 }
 
+type ModuleSublayer = EndUserLayerSublayers | CoreLayerSublayers | FoundationLayerSublayers;
+
 interface Node {
   data: {
     id: string;
@@ -101,6 +103,49 @@ function consumerTypeToEdgeLabel(kind: string): string {
   }
 }
 
+/**
+ * Given the name of a module, extract the type of module based on its extension
+ * If no explicit defined extension, the module will be of layer Enduser
+ * @param moduleName
+ */
+function moduleSuffixToLayers(moduleName: string): {
+  layer: ModuleLayers, sublayer: ModuleSublayer,
+} {
+  const suffix = moduleName.split('_').pop()?.toLowerCase();
+  switch (suffix) {
+    case 'api':
+      return { layer: ModuleLayers.CORE, sublayer: CoreLayerSublayers.API };
+    case 'cw':
+      return { layer: ModuleLayers.CORE, sublayer: CoreLayerSublayers.CORE_WIDGETS };
+    case 'cs':
+      return { layer: ModuleLayers.CORE, sublayer: CoreLayerSublayers.CORE_SERVICE };
+    case 'bl':
+      return { layer: ModuleLayers.CORE, sublayer: CoreLayerSublayers.COMPOSITE_LOGIC };
+    case 'theme':
+    case 'thm':
+    case 'th':
+      return { layer: ModuleLayers.FOUNDATION, sublayer: FoundationLayerSublayers.STYLE_GUIDE };
+    case 'is':
+      return {
+        layer: ModuleLayers.FOUNDATION,
+        sublayer: FoundationLayerSublayers.FOUNDATION_SERVICE,
+      };
+    case 'lib':
+      return { layer: ModuleLayers.FOUNDATION, sublayer: FoundationLayerSublayers.LIBRARY };
+    default: break;
+  }
+
+  const prefix = moduleName.split('_').shift()?.toLowerCase();
+  switch (prefix) {
+    case 'cdm':
+      return { layer: ModuleLayers.FOUNDATION, sublayer: FoundationLayerSublayers.LIBRARY };
+    default: break;
+  }
+
+  return { layer: ModuleLayers.END_USER, sublayer: EndUserLayerSublayers.END_USER };
+  throw new Error(`No module type found for module "${moduleName}"`);
+}
+
 if (process.argv.length < 3) {
   throw new Error('Expected filename');
 }
@@ -115,6 +160,14 @@ const applicationEntries: ApplicationGroupEntry[] = utils
 
 const createDomainId = (e: ApplicationGroupEntry) => `D_${e.ApplicationGroupName}`;
 const createApplicationId = (e: ApplicationGroupEntry) => `A_${e.ApplicationName}`;
+const createApplicationWithLayersId = (
+  e: ApplicationGroupEntry,
+  layer?: ModuleLayers,
+  sublayer?: ModuleSublayer,
+) => {
+  if (!layer || !sublayer) return createApplicationId(e);
+  return `A_${e.ApplicationName}.${layer}.${sublayer}`;
+};
 const createModuleId = (e: ApplicationGroupEntry) => `A_${e.ApplicationName}.M_${e.ModuleName}`;
 
 /**
@@ -178,6 +231,88 @@ function getNodes<T>(
 }
 
 /**
+ * Create a set of layer and sublayer nodes for each application node
+ * @param applicationNodes
+ */
+function getApplicationModuleLayerNodesAndEdges(applicationNodes: Node[]) {
+  const nodes: Node[] = [];
+  const edges: Edge[] = [];
+  applicationNodes.forEach((applicationNode) => {
+    Object.values(ModuleLayers).forEach((layer) => {
+      const layerNode: Node = {
+        data: {
+          id: `${applicationNode.data.id}.${layer}`,
+          properties: {
+            simpleName: layer,
+            kind: 'layer',
+            traces: [],
+          },
+          labels: [layer],
+        },
+      };
+
+      const layerEdge: Edge = {
+        data: {
+          id: `${applicationNode.data.id}.${layer}-contains`,
+          source: applicationNode.data.id,
+          target: layerNode.data.id,
+          properties: {
+            weight: 1,
+            traces: [],
+          },
+          label: 'contains',
+        },
+      };
+
+      let subLayerKeys: string[];
+      switch (layer) {
+        case ModuleLayers.END_USER: subLayerKeys = Object.values(EndUserLayerSublayers); break;
+        case ModuleLayers.CORE: subLayerKeys = Object.values(CoreLayerSublayers); break;
+        case ModuleLayers.FOUNDATION: subLayerKeys = Object.values(FoundationLayerSublayers); break;
+        default: subLayerKeys = []; break;
+      }
+
+      const subLayerNodes: Node[] = [];
+      const subLayerEdges: Edge[] = [];
+      subLayerKeys.forEach((subLayer) => {
+        const subLayerNode: Node = ({
+          data: {
+            id: `${applicationNode.data.id}.${layer}.${subLayer}`,
+            properties: {
+              simpleName: subLayer,
+              kind: 'layer',
+              traces: [],
+            },
+            labels: [subLayer],
+          },
+        });
+
+        const subLayerEdge: Edge = ({
+          data: {
+            id: `${applicationNode.data.id}.${layer}.${subLayer}-contains`,
+            source: layerNode.data.id,
+            target: subLayerNode.data.id,
+            properties: {
+              weight: 1,
+              traces: [],
+            },
+            label: 'contains',
+          },
+        });
+
+        subLayerNodes.push(subLayerNode);
+        subLayerEdges.push(subLayerEdge);
+      });
+
+      nodes.push(layerNode, ...subLayerNodes);
+      edges.push(layerEdge, ...subLayerEdges);
+    });
+  });
+
+  return { nodes, edges };
+}
+
+/**
  * Convert the list of entries to a list of edges
  * @param entries
  * @param sourceKey
@@ -189,7 +324,7 @@ function getContainEdges<T>(
   entries: T[],
   sourceKey: keyof T,
   targetKey: keyof T,
-  createSourceId: (entry: T) => string,
+  createSourceId: (entry: T, layer?: ModuleLayers, sublayer?: ModuleSublayer) => string,
   createTargetId: (entry: T) => string,
 ): Edge[] {
   const edges: Edge[] = [];
@@ -198,8 +333,13 @@ function getContainEdges<T>(
     // If the source or target does not exist, skip this entry
     if (e[sourceKey] === '' || e[targetKey] === '') return;
 
-    // Source and target ID
-    const source = createSourceId(e);
+    const {
+      layer: targetLayer,
+      sublayer: targetSublayer,
+    } = moduleSuffixToLayers(e[targetKey] as string);
+
+    // Source and target ID. For the source, add possible layering/separation in between
+    const source = createSourceId(e, targetLayer, targetSublayer);
     const target = createTargetId(e);
 
     // If the edge already exists, skip this entry
@@ -220,48 +360,6 @@ function getContainEdges<T>(
 
   return edges;
 }
-
-// /**
-//  * Convert the dataset of entries to a list of nodes
-//  * @param entries
-//  */
-// function getModuleNodes(entries: ConsumerProducerEntry[]): Node[] {
-//   const nodes: Node[] = [];
-//
-//   entries.filter((e) => e['Cons Application'] === 'Plex Plus').forEach((entry) => {
-//     const id = `${entry['Cons Application']}.${entry['Cons Espace']}`;
-//     if (nodes.findIndex((n) => n.data.id === id) >= 0) return;
-//     nodes.push({
-//       data: {
-//         id,
-//         properties: {
-//           simpleName: `${entry['Cons Application']} - ${entry['Cons Espace']}`,
-//           kind: 'node',
-//           traces: [],
-//         },
-//         labels: ['module'],
-//       },
-//     });
-//   });
-//
-//   entries.filter((e) => e['Prod Application'] === 'Plex Plus').forEach((entry) => {
-//     const id = `${entry['Prod Application']}.${entry['Prod Espace']}`;
-//     if (nodes.findIndex((n) => n.data.id === id) >= 0) return;
-//     nodes.push({
-//       data: {
-//         id,
-//         properties: {
-//           simpleName: `${entry['Prod Application']} - ${entry['Prod Espace']}`,
-//           kind: 'module',
-//           traces: [],
-//         },
-//         labels: ['module'],
-//       },
-//     });
-//   });
-//
-//   return nodes;
-// }
 
 function getModuleEdges(entries: ConsumerProducerEntry[], nodes: Node[]): Edge[] {
   const edges: Edge[] = [];
@@ -305,18 +403,22 @@ function getGraph(): Graph {
 
   const domainNodes = getNodes(entries, createDomainId, 'ApplicationGroupName', 'Domain');
   const applicationNodes = getNodes(entries, createApplicationId, 'ApplicationName', 'Application');
+  const {
+    nodes: layerNodes,
+    edges: layerEdges,
+  } = getApplicationModuleLayerNodesAndEdges(applicationNodes);
   const moduleNodes = getNodes(entries, createModuleId, 'ModuleName', 'Module');
-  const nodes = [...domainNodes, ...applicationNodes, ...moduleNodes];
+  const nodes = [...domainNodes, ...applicationNodes, ...moduleNodes, ...layerNodes];
 
   const domainContains = getContainEdges(entries, 'ApplicationGroupName', 'ApplicationName', createDomainId, createApplicationId);
-  const applicationContains = getContainEdges(entries, 'ApplicationName', 'ModuleName', createApplicationId, createModuleId);
+  const applicationContains = getContainEdges(entries, 'ApplicationName', 'ModuleName', createApplicationWithLayersId, createModuleId);
 
   const dependencyEdges = getModuleEdges(consumerProducerEntries, nodes);
 
   return {
     elements: {
       nodes,
-      edges: [...domainContains, ...applicationContains, ...dependencyEdges],
+      edges: [...domainContains, ...layerEdges, ...applicationContains, ...dependencyEdges],
     },
   };
 }
