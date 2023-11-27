@@ -40,5 +40,5 @@ async function injectGraph() {
 
 console.log('Seeding Neo4j database...');
 injectGraph().then(() => {
-  // process.exit(0);
+  process.exit(0);
 });

@@ -430,10 +430,26 @@ function getGraph(): Graph {
 
   const dependencyEdges = getModuleEdges(consumerProducerEntries, nodes);
 
+  // Remove all sublayer nodes that do not have any children
+  // (i.e. remove all sub layers that have no modules)
+  let filteredLayerNodes = layerNodes.filter((n) => applicationContains
+    .some((e) => e.data.source === n.data.id));
+  // Remove all edges that no longer have a sublayer target
+  let filteredLayerEdges = layerEdges.filter((e) => filteredLayerNodes
+    .some((n) => e.data.target === n.data.id));
+  // Remove all layer nodes that do not have any children
+  // (i.e. remove all layers that have no sub layers)
+  filteredLayerNodes = layerNodes.filter((n) => filteredLayerEdges
+    .some((e) => e.data.source === n.data.id) || applicationContains
+    .some((e) => e.data.source === n.data.id));
+  // Remove all edges that no longer have a layer target
+  filteredLayerEdges = layerEdges.filter((e) => filteredLayerNodes
+    .some((n) => e.data.target === n.data.id));
+
   return {
     elements: {
-      nodes,
-      edges: [...domainContains, ...layerEdges, ...applicationContains, ...dependencyEdges],
+      nodes: [...domainNodes, ...applicationNodes, ...filteredLayerNodes, ...moduleNodes],
+      edges: [...domainContains, ...filteredLayerEdges, ...applicationContains, ...dependencyEdges],
     },
   };
 }
