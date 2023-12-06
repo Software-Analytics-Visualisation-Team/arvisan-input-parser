@@ -26,6 +26,12 @@ enum FoundationLayerSublayers {
   LIBRARY = 'Library',
 }
 
+const moduleColors = {
+  [ModuleLayers.END_USER]: '#3498DB',
+  [ModuleLayers.CORE]: '#E67E22',
+  [ModuleLayers.FOUNDATION]: '#28B463',
+};
+
 type ModuleSublayer = EndUserLayerSublayers | CoreLayerSublayers | FoundationLayerSublayers;
 
 export interface Node {
@@ -35,6 +41,8 @@ export interface Node {
       simpleName: string;
       kind: string;
       traces: string[];
+      color: string;
+      depth: number;
     }
     labels: string[];
   }
@@ -206,6 +214,7 @@ function edgeExists(edges: Edge[], source: string, target: string) {
  * @param createId
  * @param layer
  * @param layerName Label to use in the node
+ * @param properties
  * @param createName
  */
 function getNodes<T>(
@@ -213,6 +222,7 @@ function getNodes<T>(
   createId: (entry: T) => string,
   layer: keyof T,
   layerName: string,
+  properties: { color: string, depth: number },
   createName?: (entry: T) => string,
 ): Node[] {
   const nodes: Node[] = [];
@@ -229,6 +239,7 @@ function getNodes<T>(
       data: {
         id,
         properties: {
+          ...properties,
           simpleName: createName ? createName(e) : id,
           kind: 'node',
           traces: [],
@@ -250,33 +261,6 @@ function getApplicationModuleLayerNodesAndEdges(applicationNodes: Node[]) {
   const edges: Edge[] = [];
   applicationNodes.forEach((applicationNode) => {
     Object.values(ModuleLayers).forEach((layer) => {
-      const layerNode: Node = {
-        data: {
-          id: format(`${applicationNode.data.id}__${layer}`),
-          properties: {
-            simpleName: `layer_${layer}`,
-            kind: 'layer',
-            traces: [],
-          },
-          labels: [`layer_${layer}`],
-        },
-      };
-
-      const id = format(`${applicationNode.data.id}__${layer}__contains`);
-
-      const layerEdge: Edge = {
-        data: {
-          id,
-          source: applicationNode.data.id,
-          target: layerNode.data.id,
-          properties: {
-            weight: 1,
-            traces: [],
-          },
-          label: 'contains',
-        },
-      };
-
       let subLayerKeys: string[];
       switch (layer) {
         case ModuleLayers.END_USER: subLayerKeys = Object.values(EndUserLayerSublayers); break;
@@ -295,17 +279,17 @@ function getApplicationModuleLayerNodesAndEdges(applicationNodes: Node[]) {
               simpleName: `sublayer-${subLayer}`,
               kind: 'layer',
               traces: [],
+              color: moduleColors[layer],
+              depth: 3,
             },
             labels: [`sublayer_${subLayer}`],
           },
         });
 
-        const id = format(`${applicationNode.data.id}__${layer}_${subLayer}__contains`);
-
         const subLayerEdge: Edge = ({
           data: {
-            id,
-            source: layerNode.data.id,
+            id: format(`${applicationNode.data.id}__${subLayer}__contains`),
+            source: applicationNode.data.id,
             target: subLayerNode.data.id,
             properties: {
               weight: 1,
@@ -319,8 +303,8 @@ function getApplicationModuleLayerNodesAndEdges(applicationNodes: Node[]) {
         subLayerEdges.push(subLayerEdge);
       });
 
-      nodes.push(layerNode, ...subLayerNodes);
-      edges.push(layerEdge, ...subLayerEdges);
+      nodes.push(...subLayerNodes);
+      edges.push(...subLayerEdges);
     });
   });
 
@@ -411,23 +395,51 @@ function getModuleEdges(entries: ConsumerProducerEntry[], nodes: Node[]): Edge[]
 }
 
 /**
+ * Color the module nodes based on what "contain" edge they have.
+ * @param nodes
+ * @param edges
+ */
+function colorModuleNodes(moduleNodes: Node[], edges: Edge[], allNodes: Node[]): Node[] {
+  return moduleNodes.map((moduleNode) => {
+    const containEdge = edges.find((e) => e.data.target === moduleNode.data.id && e.data.label === 'contains');
+    if (!containEdge) return moduleNode;
+
+    const sourceNode = allNodes.find((n) => n.data.id === containEdge.data.source);
+    if (!sourceNode) return moduleNode;
+
+    return {
+      ...moduleNode,
+      data: {
+        ...moduleNode.data,
+        properties: {
+          ...moduleNode.data.properties,
+          color: sourceNode.data.properties.color,
+        },
+      },
+    } as Node;
+  });
+}
+
+/**
  * Given a list of entries, create a labelled property graph from it
  */
 function getGraph(): Graph {
   const entries = applicationEntries; // .filter((a) => a.ApplicationGroupName === 'MyService Agreements');
 
-  const domainNodes = getNodes(entries, createDomainId, 'ApplicationGroupName', 'Domain');
-  const applicationNodes = getNodes(entries, createApplicationId, 'ApplicationName', 'Application');
+  const domainNodes = getNodes(entries, createDomainId, 'ApplicationGroupName', 'Domain', { color: '#7B7D7D', depth: 0 });
+  const applicationNodes = getNodes(entries, createApplicationId, 'ApplicationName', 'Application', { color: '#7B7D7D', depth: 1 });
   const {
     nodes: layerNodes,
     edges: layerEdges,
   } = getApplicationModuleLayerNodesAndEdges(applicationNodes);
-  const moduleNodes = getNodes(entries, createModuleId, 'ModuleName', 'Module');
-  const nodes = [...domainNodes, ...applicationNodes, ...moduleNodes, ...layerNodes];
+  const moduleNodes = getNodes(entries, createModuleId, 'ModuleName', 'Module', { color: '#7B7D7D', depth: 4 });
 
   const domainContains = getContainEdges(entries, 'ApplicationGroupName', 'ApplicationName', createDomainId, createApplicationId);
   const applicationContains = getContainEdges(entries, 'ApplicationName', 'ModuleName', createApplicationWithLayersId, createModuleId);
 
+  const coloredModuleNodes = colorModuleNodes(moduleNodes, applicationContains, layerNodes);
+
+  const nodes = [...domainNodes, ...applicationNodes, ...coloredModuleNodes, ...layerNodes];
   const dependencyEdges = getModuleEdges(consumerProducerEntries, nodes);
 
   // Remove all sublayer nodes that do not have any children
@@ -448,7 +460,7 @@ function getGraph(): Graph {
 
   return {
     elements: {
-      nodes: [...domainNodes, ...applicationNodes, ...filteredLayerNodes, ...moduleNodes],
+      nodes: [...domainNodes, ...applicationNodes, ...filteredLayerNodes, ...coloredModuleNodes],
       edges: [...domainContains, ...filteredLayerEdges, ...applicationContains, ...dependencyEdges],
     },
   };
