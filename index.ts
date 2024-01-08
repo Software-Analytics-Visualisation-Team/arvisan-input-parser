@@ -318,6 +318,7 @@ function getApplicationModuleLayerNodesAndEdges(applicationNodes: Node[]) {
  * @param targetKey
  * @param createSourceId
  * @param createTargetId
+ * @param defaultSource Source node to use if an entry does not have a source node
  */
 function getContainEdges<T>(
   entries: T[],
@@ -325,21 +326,29 @@ function getContainEdges<T>(
   targetKey: keyof T,
   createSourceId: (entry: T, layer?: ModuleLayers, sublayer?: ModuleSublayer) => string,
   createTargetId: (entry: T) => string,
+  defaultSource?: T,
 ): Edge[] {
   const edges: Edge[] = [];
 
   entries.forEach((e) => {
-    // If the source or target does not exist, skip this entry
-    if (e[sourceKey] === '' || e[targetKey] === '') return;
-
-    const {
-      layer: targetLayer,
-      sublayer: targetSublayer,
-    } = moduleSuffixToLayers(e[targetKey] as string);
-
-    // Source and target ID. For the source, add possible layering/separation in between
-    const source = createSourceId(e, targetLayer, targetSublayer);
+    // If the target does not exist, skip this entry
+    if (e[targetKey] === '') {
+      return;
+    }
+    let source: string;
     const target = createTargetId(e);
+
+    if (e[sourceKey] === '' && !defaultSource) {
+      return;
+    } if (e[sourceKey] === '' && defaultSource) {
+      source = createSourceId(defaultSource);
+    } else {
+      const {
+        layer: targetLayer,
+        sublayer: targetSublayer,
+      } = moduleSuffixToLayers(e[targetKey] as string);
+      source = createSourceId(e, targetLayer, targetSublayer);
+    }
 
     // If the edge already exists, skip this entry
     if (edgeExists(edges, source, target)) return;
@@ -426,7 +435,14 @@ function colorModuleNodes(moduleNodes: Node[], edges: Edge[], allNodes: Node[]):
 function getGraph(): Graph {
   const entries = applicationEntries; // .filter((a) => a.ApplicationGroupName === 'MyService Agreements');
 
-  const domainNodes = getNodes(entries, createDomainId, 'ApplicationGroupName', 'Domain', { color: '#7B7D7D', depth: 0 });
+  const defaultDomainNode: ApplicationGroupEntry = {
+    ApplicationGroupName: 'no_domain',
+    ApplicationName: '',
+    ModuleKind: 'eSpace',
+    ModuleName: '',
+  };
+
+  const domainNodes = getNodes([...entries, defaultDomainNode], createDomainId, 'ApplicationGroupName', 'Domain', { color: '#7B7D7D', depth: 0 });
   const applicationNodes = getNodes(entries, createApplicationId, 'ApplicationName', 'Application', { color: '#7B7D7D', depth: 1 });
   const {
     nodes: layerNodes,
@@ -434,7 +450,7 @@ function getGraph(): Graph {
   } = getApplicationModuleLayerNodesAndEdges(applicationNodes);
   const moduleNodes = getNodes(entries, createModuleId, 'ModuleName', 'Module', { color: '#7B7D7D', depth: 4 });
 
-  const domainContains = getContainEdges(entries, 'ApplicationGroupName', 'ApplicationName', createDomainId, createApplicationId);
+  const domainContains = getContainEdges(entries, 'ApplicationGroupName', 'ApplicationName', createDomainId, createApplicationId, defaultDomainNode);
   const applicationContains = getContainEdges(entries, 'ApplicationName', 'ModuleName', createApplicationWithLayersId, createModuleId);
 
   const coloredModuleNodes = colorModuleNodes(moduleNodes, applicationContains, layerNodes);
