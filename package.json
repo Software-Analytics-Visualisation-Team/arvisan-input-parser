@@ -2,10 +2,10 @@
   "name": "untitled",
   "version": "1.0.0",
   "description": "",
-  "main": "index.ts",
+  "main": "src/dependency-graph.ts",
   "scripts": {
-    "run": "ts-node index.ts",
-    "run:db": "ts-node neo4j-inject.ts"
+    "run": "ts-node src/dependency-graph.ts",
+    "run:db": "ts-node src/neo4j-inject.ts"
   },
   "keywords": [],
   "author": "",

@@ -1,72 +1,16 @@
 import { readFile, utils } from 'xlsx';
 import fs from 'fs';
-
-enum ModuleLayers {
-  END_USER = 'Enduser',
-  CORE = 'Core',
-  FOUNDATION = 'Foundation',
-}
-
-enum EndUserLayerSublayers {
-  END_USER = 'Enduser',
-}
-
-enum CoreLayerSublayers {
-  CORE = 'Core',
-  API = 'API',
-  CORE_WIDGETS = 'CoreWidgets',
-  COMPOSITE_LOGIC = 'CompositeLogic',
-  CORE_SERVICE = 'CoreService',
-}
-
-enum FoundationLayerSublayers {
-  FOUNDATION = 'Foundation',
-  STYLE_GUIDE = 'StyleGuide',
-  FOUNDATION_SERVICE = 'FoundationService',
-  LIBRARY = 'Library',
-}
-
-const moduleColors = {
-  [ModuleLayers.END_USER]: '#3498DB',
-  [ModuleLayers.CORE]: '#E67E22',
-  [ModuleLayers.FOUNDATION]: '#28B463',
-};
-
-type ModuleSublayer = EndUserLayerSublayers | CoreLayerSublayers | FoundationLayerSublayers;
-
-export interface Node {
-  data: {
-    id: string;
-    properties: {
-      simpleName: string;
-      kind: string;
-      traces: string[];
-      color: string;
-      depth: number;
-    }
-    labels: string[];
-  }
-}
-
-export interface Edge {
-  data: {
-    id: string;
-    source: string;
-    target: string;
-    label: string;
-    properties: {
-      weight: number;
-      traces: string[];
-    }
-  }
-}
-
-export interface Graph {
-  elements: {
-    nodes: Node[];
-    edges: Edge[];
-  }
-}
+import {
+  CoreLayerSublayers,
+  EndUserLayerSublayers,
+  FoundationLayerSublayers,
+  ModuleLayers,
+  ModuleSublayer,
+  Node,
+  Edge,
+  Graph, moduleColors, formatName as format,
+} from './structure';
+import { edgeExists, nodeExists, validateGraph } from './graph';
 
 interface ConsumerProducerEntry {
   'Cons Application': string // Consumer application
@@ -153,18 +97,6 @@ function moduleSuffixToLayers(moduleName: string): {
   return { layer: ModuleLayers.END_USER, sublayer: EndUserLayerSublayers.END_USER };
 }
 
-function format(id: string) {
-  return id
-    .replaceAll(' ', '_')
-    .replaceAll('-', '__')
-    .replaceAll('&', 'and')
-    .replaceAll('/', '')
-    .replaceAll('+', 'plus')
-    .replaceAll('(', '')
-    .replaceAll(')', '')
-    .replaceAll('.', '');
-}
-
 if (process.argv.length < 3) {
   throw new Error('Expected filename');
 }
@@ -188,25 +120,6 @@ const createApplicationWithLayersId = (
   return format(`A_${e.ApplicationName}__${layer}_${sublayer}`);
 };
 const createModuleId = (e: ApplicationGroupEntry) => format(`A_${e.ApplicationName}__M_${e.ModuleName}`);
-
-/**
- * Helper function to check if a node exists
- * @param nodes
- * @param id
- */
-function nodeExists(nodes: Node[], id: string) {
-  return nodes.findIndex((n) => n.data.id === id) >= 0;
-}
-
-/**
- * Helper function to check if an edge exists
- * @param edges
- * @param source
- * @param target
- */
-function edgeExists(edges: Edge[], source: string, target: string) {
-  return edges.findIndex((e) => e.data.source === source && e.data.target === target) >= 0;
-}
 
 /**
  * Convert the list of entities to a list of nodes
@@ -276,13 +189,13 @@ function getApplicationModuleLayerNodesAndEdges(applicationNodes: Node[]) {
           data: {
             id: format(`${applicationNode.data.id}__${layer}_${subLayer}`),
             properties: {
-              simpleName: `sublayer-${subLayer}`,
+              simpleName: `Sublayer-${subLayer}`,
               kind: 'layer',
               traces: [],
               color: moduleColors[layer],
               depth: 3,
             },
-            labels: [`sublayer_${subLayer}`],
+            labels: [`Sublayer_${subLayer}`],
           },
         });
 
@@ -480,36 +393,6 @@ function getGraph(): Graph {
       edges: [...domainContains, ...filteredLayerEdges, ...applicationContains, ...dependencyEdges],
     },
   };
-}
-
-/**
- * Validate that the graph adheres to the ClassViz spec
- * https://rsatrioadi.github.io/classviz/
- * @param graph
- */
-function validateGraph(graph: Graph) {
-  graph.elements.nodes.forEach((n, i, all) => {
-    // Every node should have a unique ID
-    if (all.filter((n2) => n2.data.id === n.data.id).length > 1) {
-      throw new Error(`There exists more than one node with ID ${n.data.id}`);
-    }
-  });
-
-  graph.elements.edges.forEach((e, i, all) => {
-    // Every edge should have a unique ID
-    if (all.filter((e2) => e2.data.id === e.data.id).length > 1) {
-      throw new Error(`There exists more than one edge with ID ${e.data.id}`);
-    }
-
-    // Source should exist
-    if (!nodeExists(graph.elements.nodes, e.data.source)) {
-      throw new Error(`Source node with ID ${e.data.source} does not exist!`);
-    }
-    // Target should exist
-    if (!nodeExists(graph.elements.nodes, e.data.target)) {
-      throw new Error(`Source node with ID ${e.data.target} does not exist!`);
-    }
-  });
 }
 
 // eslint-disable-next-line import/prefer-default-export

@@ -1,5 +1,7 @@
 import neo4j from 'neo4j-driver';
-import { Edge, graph, Node } from './index';
+import { Edge, Graph, Node } from './structure';
+import { graph } from './dependency-graph';
+import { getViolationsAsGraph } from './violations';
 
 const driver = neo4j.driver('bolt://localhost:7687', neo4j.auth.basic('neo4j', ''));
 
@@ -19,6 +21,10 @@ function createEdgeQuery(e: Edge, nodes: Node[]): string {
   return `(${e.data.source})-[:${e.data.label.toUpperCase()} {id: '${e.data.id}'}]->(${e.data.target})`;
 }
 
+function createQuery(g: Graph): string {
+  return `CREATE ${g.elements.nodes.map((n) => createNodeQuery(n)).join(', ')}, ${g.elements.edges.map((e) => createEdgeQuery(e, g.elements.nodes))}`;
+}
+
 async function injectGraph() {
   const session = driver.session();
   try {
@@ -31,12 +37,14 @@ async function injectGraph() {
   }
 
   try {
-    await session.run(`CREATE ${graph.elements.nodes.map((n) => createNodeQuery(n)).join(', ')}, ${graph.elements.edges.map((e) => createEdgeQuery(e, graph.elements.nodes))}`);
+    await session.run(createQuery(graph));
+    await session.run(createQuery(getViolationsAsGraph()));
     // await Promise.all(graph.elements.edges.map(async (edge) => {
     //   const session = driver.session();
     //   await session.run(createEdgeQuery(edge, graph.elements.nodes));
     //   await session.close();
     // }));
+    await session.run;
     console.log('Seeded database');
   } catch (e) {
     console.error(`Could not inject graph: ${e}`);
