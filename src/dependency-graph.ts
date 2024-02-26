@@ -101,13 +101,19 @@ if (process.argv.length < 3) {
   throw new Error('Expected filename');
 }
 
-const consumerProducerWorkbook = readFile(process.argv[2]);
-const consumerProducerEntries: ConsumerProducerEntry[] = utils
-  .sheet_to_json(consumerProducerWorkbook.Sheets[consumerProducerWorkbook.SheetNames[0]]);
+console.log('Loading files...');
 
-const applicationWorkbook = readFile(process.argv[3]);
+const applicationWorkbook = readFile(process.argv[2]);
 const applicationEntries: ApplicationGroupEntry[] = utils
   .sheet_to_json(applicationWorkbook.Sheets[applicationWorkbook.SheetNames[0]]);
+
+const consumerProducerWorkbooks = process.argv.slice(3).map((file) => readFile(file));
+const consumerProducerEntries = consumerProducerWorkbooks
+  .map((workbook): ConsumerProducerEntry[] => utils
+    .sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]))
+  .flat();
+
+console.log('Loaded files!');
 
 const createDomainId = (e: ApplicationGroupEntry) => format(`D_${e.ApplicationGroupName}`);
 const createApplicationId = (e: ApplicationGroupEntry) => format(`A_${e.ApplicationName}`);
@@ -189,7 +195,7 @@ function getApplicationModuleLayerNodesAndEdges(applicationNodes: Node[]) {
           data: {
             id: format(`${applicationNode.data.id}__${layer}_${subLayer}`),
             properties: {
-              simpleName: `Sublayer-${subLayer}`,
+              simpleName: `Sublayer_${subLayer}`,
               kind: 'layer',
               traces: [],
               color: moduleColors[layer],
@@ -318,8 +324,9 @@ function getModuleEdges(entries: ConsumerProducerEntry[], nodes: Node[]): Edge[]
 
 /**
  * Color the module nodes based on what "contain" edge they have.
- * @param nodes
+ * @param moduleNodes
  * @param edges
+ * @param allNodes
  */
 function colorModuleNodes(moduleNodes: Node[], edges: Edge[], allNodes: Node[]): Node[] {
   return moduleNodes.map((moduleNode) => {
@@ -408,4 +415,8 @@ fs.writeFileSync('relationships.csv', graph.elements.edges
   .map((n) => [n.data.id, n.data.label, n.data.source, n.data.target].map((x) => x.toString()).join(';'))
   .join('\n'));
 
+console.log('Graph written to disk');
+
 validateGraph(graph);
+
+console.log('Graph successfully validated');

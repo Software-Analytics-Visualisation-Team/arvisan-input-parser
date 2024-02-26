@@ -1,7 +1,7 @@
 import {
   CoreLayerSublayers, Edge,
   EndUserLayerSublayers,
-  formatName, FoundationLayerSublayers,
+  FoundationLayerSublayers,
   Graph,
   moduleColors,
   ModuleLayers,
@@ -9,7 +9,7 @@ import {
 } from './structure';
 
 function getName(sublayer: string) {
-  return formatName(`Sublayer-${sublayer}`);
+  return `Sublayer_${sublayer}`;
 }
 
 function createSublayerNodes(layer: ModuleLayers, sublayers: string[]): Node[] {
@@ -55,9 +55,9 @@ export function getViolationsAsGraph(): Graph {
   ];
 
   const edges = [
-    ...createLayerViolationEdges(endUserSublayers, coreSublayers),
-    ...createLayerViolationEdges(endUserSublayers, foundationSublayers),
-    ...createLayerViolationEdges(coreSublayers, foundationSublayers),
+    ...createLayerViolationEdges(coreSublayers, endUserSublayers),
+    ...createLayerViolationEdges(foundationSublayers, endUserSublayers),
+    ...createLayerViolationEdges(foundationSublayers, coreSublayers),
   ];
 
   return { elements: { nodes, edges } };

@@ -1,5 +1,5 @@
 {
-  "name": "untitled",
+  "name": "vopak-static-arch-transformer",
   "version": "1.0.0",
   "description": "",
   "main": "src/dependency-graph.ts",
@@ -12,7 +12,7 @@
   "license": "ISC",
   "dependencies": {
     "neo4j-driver": "^5.14.0",
-    "xlsx": "^0.18.5"
+    "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.1/xlsx-0.20.1.tgz"
   },
   "devDependencies": {
     "@typescript-eslint/eslint-plugin": "^6.9.0",
