@@ -1,6 +1,5 @@
 import neo4j from 'neo4j-driver';
 import { Edge, Graph, Node } from './structure';
-import { graph } from './dependency-graph';
 import { getViolationsAsGraph } from './violations';
 
 const driver = neo4j.driver('bolt://localhost:7687', neo4j.auth.basic('neo4j', ''));
@@ -25,7 +24,8 @@ function createQuery(g: Graph): string {
   return `CREATE ${g.elements.nodes.map((n) => createNodeQuery(n)).join(', ')}, ${g.elements.edges.map((e) => createEdgeQuery(e, g.elements.nodes))}`;
 }
 
-async function injectGraph() {
+export default async function injectGraph(graph: Graph) {
+  console.log('Seeding Neo4j database...');
   const session = driver.session();
   try {
     await session.run('MATCH (n) DETACH delete n');
@@ -53,8 +53,3 @@ async function injectGraph() {
     await driver.close();
   }
 }
-
-console.log('Seeding Neo4j database...');
-injectGraph().then(() => {
-  process.exit(0);
-});

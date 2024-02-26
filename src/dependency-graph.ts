@@ -1,5 +1,4 @@
 import { readFile, utils } from 'xlsx';
-import fs from 'fs';
 import {
   CoreLayerSublayers,
   EndUserLayerSublayers,
@@ -10,7 +9,7 @@ import {
   Edge,
   Graph, moduleColors, formatName as format,
 } from './structure';
-import { edgeExists, nodeExists, validateGraph } from './graph';
+import { edgeExists, nodeExists } from './graph';
 
 interface ConsumerProducerEntry {
   'Cons Application': string // Consumer application
@@ -96,24 +95,6 @@ function moduleSuffixToLayers(moduleName: string): {
 
   return { layer: ModuleLayers.END_USER, sublayer: EndUserLayerSublayers.END_USER };
 }
-
-if (process.argv.length < 3) {
-  throw new Error('Expected filename');
-}
-
-console.log('Loading files...');
-
-const applicationWorkbook = readFile(process.argv[2]);
-const applicationEntries: ApplicationGroupEntry[] = utils
-  .sheet_to_json(applicationWorkbook.Sheets[applicationWorkbook.SheetNames[0]]);
-
-const consumerProducerWorkbooks = process.argv.slice(3).map((file) => readFile(file));
-const consumerProducerEntries = consumerProducerWorkbooks
-  .map((workbook): ConsumerProducerEntry[] => utils
-    .sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]))
-  .flat();
-
-console.log('Loaded files!');
 
 const createDomainId = (e: ApplicationGroupEntry) => format(`D_${e.ApplicationGroupName}`);
 const createApplicationId = (e: ApplicationGroupEntry) => format(`A_${e.ApplicationName}`);
@@ -352,8 +333,22 @@ function colorModuleNodes(moduleNodes: Node[], edges: Edge[], allNodes: Node[]):
 /**
  * Given a list of entries, create a labelled property graph from it
  */
-function getGraph(): Graph {
-  const entries = applicationEntries; // .filter((a) => a.ApplicationGroupName === 'MyService Agreements');
+export default function getGraph(structureFile: string, dependencyFiles: string[]): Graph {
+  console.log('Loading files...');
+
+  const applicationWorkbook = readFile(structureFile);
+  const applicationEntries: ApplicationGroupEntry[] = utils
+    .sheet_to_json(applicationWorkbook.Sheets[applicationWorkbook.SheetNames[0]]);
+
+  const consumerProducerWorkbooks = dependencyFiles.map((file) => readFile(file));
+  const consumerProducerEntries = consumerProducerWorkbooks
+    .map((workbook): ConsumerProducerEntry[] => utils
+      .sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]))
+    .flat();
+
+  console.log('Loaded files!');
+
+  const entries = applicationEntries;
 
   const defaultDomainNode: ApplicationGroupEntry = {
     ApplicationGroupName: 'no_domain',
@@ -401,22 +396,3 @@ function getGraph(): Graph {
     },
   };
 }
-
-// eslint-disable-next-line import/prefer-default-export
-export const graph = getGraph();
-// eslint-disable-next-line no-console
-console.log(`Generated LPG with ${graph.elements.nodes.length} nodes and ${graph.elements.edges.length} edges.`);
-
-fs.writeFileSync('graph.json', JSON.stringify(graph, null, 4));
-fs.writeFileSync('nodes.csv', graph.elements.nodes
-  .map((n) => [n.data.id, n.data.labels[0]].map((x) => x.toString()).join(';'))
-  .join('\n'));
-fs.writeFileSync('relationships.csv', graph.elements.edges
-  .map((n) => [n.data.id, n.data.label, n.data.source, n.data.target].map((x) => x.toString()).join(';'))
-  .join('\n'));
-
-console.log('Graph written to disk');
-
-validateGraph(graph);
-
-console.log('Graph successfully validated');

@@ -4,24 +4,25 @@
   "description": "",
   "main": "src/dependency-graph.ts",
   "scripts": {
-    "run": "ts-node src/dependency-graph.ts",
-    "run:db": "ts-node src/neo4j-inject.ts"
+    "transform": "tsx src/index.ts"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "commander": "^12.0.0",
     "neo4j-driver": "^5.14.0",
     "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.1/xlsx-0.20.1.tgz"
   },
   "devDependencies": {
+    "@types/node": "^20.11.20",
     "@typescript-eslint/eslint-plugin": "^6.9.0",
     "@typescript-eslint/parser": "^6.9.0",
     "eslint": "^8.52.0",
     "eslint-config-airbnb-base": "^15.0.0",
     "eslint-config-airbnb-typescript": "^17.1.0",
     "eslint-plugin-import": "^2.29.0",
-    "ts-node": "^10.9.1",
+    "tsx": "^4.7.1",
     "typescript": "^5.2.2"
   }
 }
