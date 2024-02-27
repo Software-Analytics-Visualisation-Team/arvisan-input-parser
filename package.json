@@ -12,6 +12,8 @@
   "dependencies": {
     "commander": "^12.0.0",
     "neo4j-driver": "^5.14.0",
+    "pino": "^8.19.0",
+    "pino-pretty": "^10.3.1",
     "stringify-object": "^5.0.0",
     "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.1/xlsx-0.20.1.tgz"
   },

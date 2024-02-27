@@ -3,6 +3,7 @@ import fs from 'fs';
 import getGraph from './dependency-graph';
 import { validateGraph } from './graph';
 import injectGraph from './neo4j-inject';
+import logger from './logger';
 
 function groupInputFiles(newFile: string, allFiles: string[]) {
   allFiles.push(newFile);
@@ -23,10 +24,10 @@ program.parse();
 const options = program.opts();
 
 const graph = getGraph(options.grouping, options.dependencies);
-console.log(`Generated LPG with ${graph.elements.nodes.length} nodes and ${graph.elements.edges.length} edges.`);
+logger.info(`Generated LPG with ${graph.elements.nodes.length} nodes and ${graph.elements.edges.length} edges.`);
 
 validateGraph(graph);
-console.log('Graph successfully validated');
+logger.info('Graph successfully validated');
 
 if (options.json) {
   fs.writeFileSync('graph.json', JSON.stringify(graph, null, 4));
@@ -40,7 +41,7 @@ if (options.csv) {
     .join('\n'));
 }
 if (options.json || options.csv) {
-  console.log('Graph written to disk');
+  logger.info('Graph written to disk');
 }
 
 if (options.seed) {

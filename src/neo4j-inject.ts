@@ -2,6 +2,7 @@ import neo4j from 'neo4j-driver';
 import stringifyObject from 'stringify-object';
 import { Edge, Graph, Node } from './structure';
 import { getViolationsAsGraph } from './violations';
+import logger from './logger';
 
 const driver = neo4j.driver('bolt://localhost:7687', neo4j.auth.basic('neo4j', ''));
 
@@ -23,12 +24,12 @@ function createEdgeQuery(e: Edge, nodes: Node[]): string {
 
 function createQuery(g: Graph): string {
   const query = `CREATE ${g.elements.nodes.map((n) => createNodeQuery(n)).join(', ')}, ${g.elements.edges.map((e) => createEdgeQuery(e, g.elements.nodes))}`;
-  console.log('Built query...');
+  logger.info('Built query...');
   return query;
 }
 
 export default async function injectGraph(graph: Graph) {
-  console.log('Seeding Neo4j database...');
+  logger.info('Seeding Neo4j database...');
   const session = driver.session();
   try {
     await session.run('MATCH (n) DETACH delete n');
@@ -41,10 +42,10 @@ export default async function injectGraph(graph: Graph) {
 
   try {
     await session.run(createQuery(graph));
-    console.log('Seeded entries');
+    logger.info('Seeded entries');
     await session.run(createQuery(getViolationsAsGraph()));
-    console.log('Seeded violations');
-    console.log('Seeded database');
+    logger.info('Seeded violations');
+    logger.info('Seeded database');
   } catch (e) {
     console.error(`Could not inject graph: ${e}`);
   } finally {

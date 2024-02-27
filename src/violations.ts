@@ -36,8 +36,7 @@ function createLayerViolationEdges(sublayersFrom: string[], sublayersTo: string[
       source: getName(from),
       target: getName(to),
       properties: {
-        weight: 1,
-        traces: [],
+        referenceType: 'Violates',
       },
     },
   }))).flat();

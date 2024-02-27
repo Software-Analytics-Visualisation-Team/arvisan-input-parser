@@ -13,6 +13,7 @@ import {
   Node,
 } from './structure';
 import { edgeExists, nodeExists } from './graph';
+import logger from './logger';
 
 interface ConsumerProducerEntry {
   'Cons Application': string // Consumer application
@@ -335,7 +336,7 @@ function colorModuleNodes(moduleNodes: Node[], edges: Edge[], allNodes: Node[]):
  * Given a list of entries, create a labelled property graph from it
  */
 export default function getGraph(structureFile: string, dependencyFiles: string[]): Graph {
-  console.log('Loading files...');
+  logger.info('Loading files...');
 
   const applicationWorkbook = readFile(structureFile);
   const applicationEntries: ApplicationGroupEntry[] = utils
@@ -347,7 +348,7 @@ export default function getGraph(structureFile: string, dependencyFiles: string[
       .sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]))
     .flat();
 
-  console.log('Loaded files!');
+  logger.info('Loaded files!');
 
   const entries = applicationEntries;
 
