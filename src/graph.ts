@@ -46,5 +46,9 @@ export function validateGraph(graph: Graph) {
     if (!nodeExists(graph.elements.nodes, e.data.target)) {
       throw new Error(`Source node with ID ${e.data.target} does not exist!`);
     }
+
+    if (e.data.label !== 'contains' && e.data.properties.dependencyType === undefined) {
+      throw new Error(`Dependency edge ${e.data.id} with source ${e.data.source} and target ${e.data.target} has no dependency type`);
+    }
   });
 }

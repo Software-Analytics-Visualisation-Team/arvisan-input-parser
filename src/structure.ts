@@ -45,6 +45,12 @@ export interface Node {
   }
 }
 
+export enum DependencyType {
+  STRONG = 'strong',
+  WEAK = 'weak',
+  ENTITY = 'entity',
+}
+
 export interface Edge {
   data: {
     id: string;
@@ -52,8 +58,8 @@ export interface Edge {
     target: string;
     label: string;
     properties: {
-      weight: number;
-      traces: string[];
+      referenceType: string;
+      dependencyType?: DependencyType;
     }
   }
 }

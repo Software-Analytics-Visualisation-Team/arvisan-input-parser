@@ -1,13 +1,16 @@
 import { readFile, utils } from 'xlsx';
 import {
   CoreLayerSublayers,
+  DependencyType,
+  Edge,
   EndUserLayerSublayers,
+  formatName as format,
   FoundationLayerSublayers,
+  Graph,
+  moduleColors,
   ModuleLayers,
   ModuleSublayer,
   Node,
-  Edge,
-  Graph, moduleColors, formatName as format,
 } from './structure';
 import { edgeExists, nodeExists } from './graph';
 
@@ -32,25 +35,25 @@ interface ApplicationGroupEntry {
  * Mapping from reference kind to edge labels
  * @param kind
  */
-function consumerTypeToEdgeLabel(kind: string): string {
+function consumerTypeToDependencyType(kind: string): DependencyType {
   switch (kind) {
-    case 'Action': return 'calls';
-    case 'Entity': return 'uses';
-    case 'Structure': return 'uses';
-    case 'ClientAction': return 'calls';
-    case 'WebBlock': return 'renders';
-    case 'StaticEntity': return 'uses';
-    case 'Image': return 'uses';
-    case 'Script': return 'uses';
-    case 'Theme': return 'uses';
-    case 'Role': return 'uses';
-    case 'WebScreen': return 'renders';
-    case 'Resource': return 'uses';
-    case 'ClientEntity': return 'uses';
-    case 'FlowExceptionHandlingFlow': return 'catches';
-    case 'ServiceAPIMethod': return 'calls';
-    case 'Process': return 'uses';
-    default: return 'unknown';
+    case 'Action': return DependencyType.STRONG;
+    case 'Entity': return DependencyType.ENTITY;
+    case 'Structure': return DependencyType.STRONG;
+    case 'ClientAction': return DependencyType.STRONG;
+    case 'WebBlock': return DependencyType.STRONG;
+    case 'StaticEntity': return DependencyType.ENTITY;
+    case 'Image': return DependencyType.STRONG;
+    case 'Script': return DependencyType.STRONG;
+    case 'Theme': return DependencyType.STRONG;
+    case 'Role': return DependencyType.STRONG;
+    case 'WebScreen': return DependencyType.STRONG;
+    case 'Resource': return DependencyType.STRONG;
+    case 'ClientEntity': return DependencyType.ENTITY;
+    case 'FlowExceptionHandlingFlow': return DependencyType.STRONG;
+    case 'ServiceAPIMethod': return DependencyType.WEAK;
+    case 'Process': return DependencyType.STRONG;
+    default: throw new Error(`Unknown consumer type: ${kind}`);
   }
 }
 
@@ -192,8 +195,7 @@ function getApplicationModuleLayerNodesAndEdges(applicationNodes: Node[]) {
             source: applicationNode.data.id,
             target: subLayerNode.data.id,
             properties: {
-              weight: 1,
-              traces: [],
+              referenceType: 'Contains',
             },
             label: 'contains',
           },
@@ -259,8 +261,7 @@ function getContainEdges<T>(
         target,
         label: 'contains',
         properties: {
-          weight: 1,
-          traces: [],
+          referenceType: 'Contains',
         },
       },
     });
@@ -291,10 +292,10 @@ function getModuleEdges(entries: ConsumerProducerEntry[], nodes: Node[]): Edge[]
           id: idUsage > 0 ? `${id}__${idUsage + 1}` : id,
           source,
           target,
-          label: consumerTypeToEdgeLabel(entry['Reference Name']),
+          label: 'calls',
           properties: {
-            weight: 1,
-            traces: [],
+            referenceType: entry['Reference Name'],
+            dependencyType: consumerTypeToDependencyType(entry['Reference Name']),
           },
         },
       });

@@ -1,4 +1,5 @@
 import neo4j from 'neo4j-driver';
+import stringifyObject from 'stringify-object';
 import { Edge, Graph, Node } from './structure';
 import { getViolationsAsGraph } from './violations';
 
@@ -17,11 +18,13 @@ function createEdgeQuery(e: Edge, nodes: Node[]): string {
   const source = nodes.find((n) => n.data.id === e.data.source);
   const target = nodes.find((n) => n.data.id === e.data.target);
   if (source == null || target == null) throw new Error('Source and/or target nodes do not exist');
-  return `(${e.data.source})-[:${e.data.label.toUpperCase()} {id: '${e.data.id}'}]->(${e.data.target})`;
+  return `(${e.data.source})-[:${e.data.label.toUpperCase()} ${stringifyObject({ ...e.data.properties, id: e.data.id }, { singleQuotes: false })}]->(${e.data.target})`;
 }
 
 function createQuery(g: Graph): string {
-  return `CREATE ${g.elements.nodes.map((n) => createNodeQuery(n)).join(', ')}, ${g.elements.edges.map((e) => createEdgeQuery(e, g.elements.nodes))}`;
+  const query = `CREATE ${g.elements.nodes.map((n) => createNodeQuery(n)).join(', ')}, ${g.elements.edges.map((e) => createEdgeQuery(e, g.elements.nodes))}`;
+  console.log('Built query...');
+  return query;
 }
 
 export default async function injectGraph(graph: Graph) {
@@ -38,13 +41,9 @@ export default async function injectGraph(graph: Graph) {
 
   try {
     await session.run(createQuery(graph));
+    console.log('Seeded entries');
     await session.run(createQuery(getViolationsAsGraph()));
-    // await Promise.all(graph.elements.edges.map(async (edge) => {
-    //   const session = driver.session();
-    //   await session.run(createEdgeQuery(edge, graph.elements.nodes));
-    //   await session.close();
-    // }));
-    await session.run;
+    console.log('Seeded violations');
     console.log('Seeded database');
   } catch (e) {
     console.error(`Could not inject graph: ${e}`);
