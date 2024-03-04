@@ -159,12 +159,47 @@ function getNodes<T>(
 /**
  * Create a set of layer and sublayer nodes for each application node
  * @param applicationNodes
+ * @param includeModuleLayerLayer Whether a fifth layer between application and sublayer
+ * (namely Layer) should be included in the resulting graph
  */
-function getApplicationModuleLayerNodesAndEdges(applicationNodes: Node[]) {
+function getApplicationModuleLayerNodesAndEdges(
+  applicationNodes: Node[],
+  includeModuleLayerLayer = false,
+) {
   const nodes: Node[] = [];
   const edges: Edge[] = [];
   applicationNodes.forEach((applicationNode) => {
     Object.values(ModuleLayers).forEach((layer) => {
+      let layerNode: Node | undefined;
+      if (includeModuleLayerLayer) {
+        layerNode = {
+          data: {
+            id: format(`${applicationNode.data.id}__${layer}`),
+            properties: {
+              simpleName: `layer_${layer}`,
+              kind: 'layer',
+              traces: [],
+              color: moduleColors[layer],
+              depth: 3,
+            },
+            labels: [`layer_${layer}`],
+          },
+        };
+        const layerEdge: Edge = {
+          data: {
+            id: format(`${applicationNode.data.id}__${layer}__contains`),
+            source: applicationNode.data.id,
+            target: layerNode.data.id,
+            properties: {
+              referenceType: 'Contains',
+            },
+            label: 'contains',
+          },
+        };
+        nodes.push(layerNode);
+        edges.push(layerEdge);
+      }
+
       let subLayerKeys: string[];
       switch (layer) {
         case ModuleLayers.END_USER: subLayerKeys = Object.values(EndUserLayerSublayers); break;
@@ -192,8 +227,8 @@ function getApplicationModuleLayerNodesAndEdges(applicationNodes: Node[]) {
 
         const subLayerEdge: Edge = ({
           data: {
-            id: format(`${applicationNode.data.id}__${subLayer}__contains`),
-            source: applicationNode.data.id,
+            id: format(`${applicationNode.data.id}__${layer}_${subLayer}__contains`),
+            source: layerNode ? layerNode.data.id : applicationNode.data.id,
             target: subLayerNode.data.id,
             properties: {
               referenceType: 'Contains',
@@ -274,10 +309,26 @@ function getContainEdges<T>(
 function getModuleEdges(entries: ConsumerProducerEntry[], nodes: Node[]): Edge[] {
   const edges: Edge[] = [];
 
+  const missing: string[] = [];
+
   entries
     // Remove all possible edges that have no corresponding nodes
-    .filter((e) => nodeExists(nodes, format(`A_${e['Cons Application']}__M_${e['Cons Espace']}`)))
-    .filter((e) => nodeExists(nodes, format(`A_${e['Prod Application']}__M_${e['Prod Espace']}`)))
+    .filter((e) => {
+      const id = `A_${e['Cons Application']}__M_${e['Cons Espace']}`;
+      if (!nodeExists(nodes, format(`A_${e['Cons Application']}__M_${e['Cons Espace']}`))) {
+        if (!missing.includes(id)) missing.push(id);
+        return false;
+      }
+      return true;
+    })
+    .filter((e) => {
+      const id = `A_${e['Prod Application']}__M_${e['Prod Espace']}`;
+      if (!nodeExists(nodes, format(id))) {
+        if (!missing.includes(id)) missing.push(id);
+        return false;
+      }
+      return true;
+    })
     // For each entry, add an aedge
     .forEach((entry) => {
       const source = format(`A_${entry['Cons Application']}__M_${entry['Cons Espace']}`);
@@ -301,6 +352,8 @@ function getModuleEdges(entries: ConsumerProducerEntry[], nodes: Node[]): Edge[]
         },
       });
     });
+
+  console.log(missing.sort().join('\n'));
 
   return edges;
 }
@@ -335,7 +388,11 @@ function colorModuleNodes(moduleNodes: Node[], edges: Edge[], allNodes: Node[]):
 /**
  * Given a list of entries, create a labelled property graph from it
  */
-export default function getGraph(structureFile: string, dependencyFiles: string[]): Graph {
+export default function getGraph(
+  structureFile: string,
+  dependencyFiles: string[],
+  includeModuleLayerLayer = false,
+): Graph {
   logger.info('Loading files...');
 
   const applicationWorkbook = readFile(structureFile);
@@ -364,7 +421,7 @@ export default function getGraph(structureFile: string, dependencyFiles: string[
   const {
     nodes: layerNodes,
     edges: layerEdges,
-  } = getApplicationModuleLayerNodesAndEdges(applicationNodes);
+  } = getApplicationModuleLayerNodesAndEdges(applicationNodes, includeModuleLayerLayer);
   const moduleNodes = getNodes(entries, createModuleId, 'ModuleName', 'Module', { color: '#7B7D7D', depth: 4 });
 
   const domainContains = getContainEdges(entries, 'ApplicationGroupName', 'ApplicationName', createDomainId, createApplicationId, defaultDomainNode);

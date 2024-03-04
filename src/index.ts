@@ -16,6 +16,7 @@ program
   .option('-s, --seed', 'seed the resulting graph the Neo4j database')
   .option('-j, --json', 'output the resulting graph as a .json file')
   .option('-c, --csv', 'output the resulting graph as a .csv file with nodes and a .csv file with edges')
+  .option('-l, --layer', 'include "layer" nodes in the resulting graph')
   .requiredOption('-g, --grouping <file>', 'location of domain (application group) dataset')
   .requiredOption('-d, --dependencies <files>', 'one or more locations of dependency dataset(s)', groupInputFiles, []);
 
@@ -23,7 +24,7 @@ program.parse();
 
 const options = program.opts();
 
-const graph = getGraph(options.grouping, options.dependencies);
+const graph = getGraph(options.grouping, options.dependencies, !!options.layer);
 logger.info(`Generated LPG with ${graph.elements.nodes.length} nodes and ${graph.elements.edges.length} edges.`);
 
 validateGraph(graph);
