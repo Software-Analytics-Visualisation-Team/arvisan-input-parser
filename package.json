@@ -4,12 +4,14 @@
   "description": "",
   "main": "index.ts",
   "scripts": {
-    "run": "ts-node index.ts"
+    "run": "ts-node index.ts",
+    "run:db": "ts-node neo4j-inject.ts"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "neo4j-driver": "^5.14.0",
     "xlsx": "^0.18.5"
   },
   "devDependencies": {

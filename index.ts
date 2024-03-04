@@ -14,21 +14,21 @@ enum EndUserLayerSublayers {
 enum CoreLayerSublayers {
   CORE = 'Core',
   API = 'API',
-  CORE_WIDGETS = 'Core Widgets',
-  COMPOSITE_LOGIC = 'Composite Logic',
-  CORE_SERVICE = 'Core Service',
+  CORE_WIDGETS = 'CoreWidgets',
+  COMPOSITE_LOGIC = 'CompositeLogic',
+  CORE_SERVICE = 'CoreService',
 }
 
 enum FoundationLayerSublayers {
   FOUNDATION = 'Foundation',
-  STYLE_GUIDE = 'Style Guide',
-  FOUNDATION_SERVICE = 'Foundation Service',
+  STYLE_GUIDE = 'StyleGuide',
+  FOUNDATION_SERVICE = 'FoundationService',
   LIBRARY = 'Library',
 }
 
 type ModuleSublayer = EndUserLayerSublayers | CoreLayerSublayers | FoundationLayerSublayers;
 
-interface Node {
+export interface Node {
   data: {
     id: string;
     properties: {
@@ -40,7 +40,7 @@ interface Node {
   }
 }
 
-interface Edge {
+export interface Edge {
   data: {
     id: string;
     source: string;
@@ -53,7 +53,7 @@ interface Edge {
   }
 }
 
-interface Graph {
+export interface Graph {
   elements: {
     nodes: Node[];
     edges: Edge[];
@@ -145,6 +145,18 @@ function moduleSuffixToLayers(moduleName: string): {
   return { layer: ModuleLayers.END_USER, sublayer: EndUserLayerSublayers.END_USER };
 }
 
+function format(id: string) {
+  return id
+    .replaceAll(' ', '_')
+    .replaceAll('-', '__')
+    .replaceAll('&', 'and')
+    .replaceAll('/', '')
+    .replaceAll('+', 'plus')
+    .replaceAll('(', '')
+    .replaceAll(')', '')
+    .replaceAll('.', '');
+}
+
 if (process.argv.length < 3) {
   throw new Error('Expected filename');
 }
@@ -157,17 +169,17 @@ const applicationWorkbook = readFile(process.argv[3]);
 const applicationEntries: ApplicationGroupEntry[] = utils
   .sheet_to_json(applicationWorkbook.Sheets[applicationWorkbook.SheetNames[0]]);
 
-const createDomainId = (e: ApplicationGroupEntry) => `D_${e.ApplicationGroupName}`;
-const createApplicationId = (e: ApplicationGroupEntry) => `A_${e.ApplicationName}`;
+const createDomainId = (e: ApplicationGroupEntry) => format(`D_${e.ApplicationGroupName}`);
+const createApplicationId = (e: ApplicationGroupEntry) => format(`A_${e.ApplicationName}`);
 const createApplicationWithLayersId = (
   e: ApplicationGroupEntry,
   layer?: ModuleLayers,
   sublayer?: ModuleSublayer,
 ) => {
   if (!layer || !sublayer) return createApplicationId(e);
-  return `A_${e.ApplicationName}.${layer}.${sublayer}`;
+  return format(`A_${e.ApplicationName}__${layer}_${sublayer}`);
 };
-const createModuleId = (e: ApplicationGroupEntry) => `A_${e.ApplicationName}.M_${e.ModuleName}`;
+const createModuleId = (e: ApplicationGroupEntry) => format(`A_${e.ApplicationName}__M_${e.ModuleName}`);
 
 /**
  * Helper function to check if a node exists
@@ -240,19 +252,21 @@ function getApplicationModuleLayerNodesAndEdges(applicationNodes: Node[]) {
     Object.values(ModuleLayers).forEach((layer) => {
       const layerNode: Node = {
         data: {
-          id: `${applicationNode.data.id}.${layer}`,
+          id: format(`${applicationNode.data.id}__${layer}`),
           properties: {
-            simpleName: layer,
+            simpleName: `layer_${layer}`,
             kind: 'layer',
             traces: [],
           },
-          labels: [layer],
+          labels: [`layer_${layer}`],
         },
       };
 
+      const id = format(`${applicationNode.data.id}__${layer}__contains`);
+
       const layerEdge: Edge = {
         data: {
-          id: `${applicationNode.data.id}.${layer}-contains`,
+          id,
           source: applicationNode.data.id,
           target: layerNode.data.id,
           properties: {
@@ -276,19 +290,21 @@ function getApplicationModuleLayerNodesAndEdges(applicationNodes: Node[]) {
       subLayerKeys.forEach((subLayer) => {
         const subLayerNode: Node = ({
           data: {
-            id: `${applicationNode.data.id}.${layer}.${subLayer}`,
+            id: format(`${applicationNode.data.id}__${layer}_${subLayer}`),
             properties: {
-              simpleName: subLayer,
+              simpleName: `sublayer-${subLayer}`,
               kind: 'layer',
               traces: [],
             },
-            labels: [subLayer],
+            labels: [`sublayer_${subLayer}`],
           },
         });
 
+        const id = format(`${applicationNode.data.id}__${layer}_${subLayer}__contains`);
+
         const subLayerEdge: Edge = ({
           data: {
-            id: `${applicationNode.data.id}.${layer}.${subLayer}-contains`,
+            id,
             source: layerNode.data.id,
             target: subLayerNode.data.id,
             properties: {
@@ -345,7 +361,7 @@ function getContainEdges<T>(
     if (edgeExists(edges, source, target)) return;
     edges.push({
       data: {
-        id: `${source}-${target}`,
+        id: `${source}__${target}`,
         source,
         target,
         label: 'contains',
@@ -365,12 +381,12 @@ function getModuleEdges(entries: ConsumerProducerEntry[], nodes: Node[]): Edge[]
 
   entries
     // Remove all possible edges that have no corresponding nodes
-    .filter((e) => nodeExists(nodes, `A_${e['Cons Application']}.M_${e['Cons Espace']}`))
-    .filter((e) => nodeExists(nodes, `A_${e['Prod Application']}.M_${e['Prod Espace']}`))
+    .filter((e) => nodeExists(nodes, format(`A_${e['Cons Application']}__M_${e['Cons Espace']}`)))
+    .filter((e) => nodeExists(nodes, format(`A_${e['Prod Application']}__M_${e['Prod Espace']}`)))
     // For each entry, add an aedge
     .forEach((entry) => {
-      const source = `A_${entry['Cons Application']}.M_${entry['Cons Espace']}`;
-      const target = `A_${entry['Prod Application']}.M_${entry['Prod Espace']}`;
+      const source = format(`A_${entry['Cons Application']}__M_${entry['Cons Espace']}`);
+      const target = format(`A_${entry['Prod Application']}__M_${entry['Prod Espace']}`);
       // Edge should not already exist
       if (edges.findIndex((e) => e.data.source === source && e.data.target === target) >= 0) return;
 
@@ -379,7 +395,7 @@ function getModuleEdges(entries: ConsumerProducerEntry[], nodes: Node[]): Edge[]
       edges.push({
         data: {
           // If the ID already exists, add a small suffix to prevent duplicates
-          id: idUsage > 0 ? `${id}-${idUsage + 1}` : id,
+          id: idUsage > 0 ? `${id}__${idUsage + 1}` : id,
           source,
           target,
           label: consumerTypeToEdgeLabel(entry['Reference Name']),
@@ -398,7 +414,7 @@ function getModuleEdges(entries: ConsumerProducerEntry[], nodes: Node[]): Edge[]
  * Given a list of entries, create a labelled property graph from it
  */
 function getGraph(): Graph {
-  const entries = applicationEntries.filter((a) => a.ApplicationGroupName === 'MyService Agreements');
+  const entries = applicationEntries; // .filter((a) => a.ApplicationGroupName === 'MyService Agreements');
 
   const domainNodes = getNodes(entries, createDomainId, 'ApplicationGroupName', 'Domain');
   const applicationNodes = getNodes(entries, createApplicationId, 'ApplicationName', 'Application');
@@ -452,10 +468,17 @@ function validateGraph(graph: Graph) {
   });
 }
 
-const graph = getGraph();
+// eslint-disable-next-line import/prefer-default-export
+export const graph = getGraph();
 // eslint-disable-next-line no-console
 console.log(`Generated LPG with ${graph.elements.nodes.length} nodes and ${graph.elements.edges.length} edges.`);
 
 fs.writeFileSync('graph.json', JSON.stringify(graph, null, 4));
+fs.writeFileSync('nodes.csv', graph.elements.nodes
+  .map((n) => [n.data.id, n.data.labels[0]].map((x) => x.toString()).join(';'))
+  .join('\n'));
+fs.writeFileSync('relationships.csv', graph.elements.edges
+  .map((n) => [n.data.id, n.data.label, n.data.source, n.data.target].map((x) => x.toString()).join(';'))
+  .join('\n'));
 
 validateGraph(graph);

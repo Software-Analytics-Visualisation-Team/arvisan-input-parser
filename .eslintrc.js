@@ -1,6 +1,6 @@
 module.exports = {
     'env': {
-        'es2016': true,
+        'es2021': true,
         'node': true
     },
     'extends': [
