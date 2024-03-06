@@ -1,10 +1,11 @@
 import neo4j from 'neo4j-driver';
 import stringifyObject from 'stringify-object';
+import { execSync } from 'node:child_process';
+import fs from 'fs';
+import path from 'node:path';
 import { Edge, Graph, Node } from './structure';
 import { getViolationsAsGraph } from './violations';
 import logger from './logger';
-
-const driver = neo4j.driver('bolt://localhost:7687', neo4j.auth.basic('neo4j', ''));
 
 function createNodeQuery(n: Node): string {
   const propertiesString = Object.keys(n.data.properties)
@@ -28,8 +29,11 @@ function createQuery(g: Graph): string {
   return query;
 }
 
-export default async function injectGraph(graph: Graph) {
+export default async function injectGraph(graph: Graph, password: string, url = 'bolt://localhost:7687') {
   logger.info('Seeding Neo4j database...');
+
+  const driver = neo4j.driver(url, neo4j.auth.basic('neo4j', password));
+
   const session = driver.session();
   try {
     await session.run('MATCH (n) DETACH delete n');
@@ -52,4 +56,24 @@ export default async function injectGraph(graph: Graph) {
     await session.close();
     await driver.close();
   }
+}
+
+export function importGraphIntoNeo4j(neo4jHomeDir: string, nodesFile = 'nodes.csv', edgesFile = 'relationships.csv') {
+  if (!fs.existsSync(neo4jHomeDir)) {
+    throw new Error('Neo4j Home Directory cannot be found. See https://neo4j.com/docs/operations-manual/current/configuration/file-locations/ to find the path to your home directory.');
+  }
+  const executablePath = path.join(neo4jHomeDir, '/bin/neo4j-admin');
+  if (!fs.existsSync(executablePath) && !fs.existsSync(`${executablePath}.bat`) && !fs.existsSync(`${executablePath}.ps1`)) {
+    throw new Error('/bin/neo4j-admin cannot be found in the given Neo4j home directory');
+  }
+  if (!fs.existsSync(nodesFile)) {
+    throw new Error(`${nodesFile} (containing all nodes) cannot be found on disk`);
+  }
+  if (!fs.existsSync(edgesFile)) {
+    throw new Error(`${edgesFile} (containing all edges) cannot be found on disk`);
+  }
+  fs.copyFileSync(nodesFile, path.join(neo4jHomeDir, '/import/nodes.csv'));
+  fs.copyFileSync(edgesFile, path.join(neo4jHomeDir, '/import/relationships.csv'));
+
+  execSync(`${executablePath} database import full --overwrite-destination --nodes=import/nodes.csv --relationships=import/relationships.csv neo4j`, { stdio: 'inherit' });
 }

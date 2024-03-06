@@ -39,15 +39,17 @@ export const moduleColors = {
 
 export type ModuleSublayer = EndUserLayerSublayers | CoreLayerSublayers | FoundationLayerSublayers;
 
+export type NodeProperties = {
+  fullName: string;
+  simpleName: string;
+  color: string;
+  depth: number;
+};
+
 export interface Node {
   data: {
     id: string;
-    properties: {
-      fullName: string;
-      simpleName: string;
-      color: string;
-      depth: number;
-    }
+    properties: NodeProperties,
     labels: string[];
   }
 }
@@ -58,17 +60,19 @@ export enum DependencyType {
   ENTITY = 'entity',
 }
 
+export interface EdgeProperties {
+  referenceType: string;
+  dependencyType?: DependencyType;
+  weight?: number;
+}
+
 export interface Edge {
   data: {
     id: string;
     source: string;
     target: string;
     label: string;
-    properties: {
-      referenceType: string;
-      dependencyType?: DependencyType;
-      weight?: number;
-    }
+    properties: EdgeProperties
   }
 }
 

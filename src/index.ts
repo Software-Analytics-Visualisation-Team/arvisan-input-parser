@@ -2,8 +2,9 @@ import { program } from 'commander';
 import fs from 'fs';
 import getGraph from './parser';
 import { validateGraph } from './graph';
-import injectGraph from './neo4j-inject';
+import injectGraph, { importGraphIntoNeo4j } from './neo4j-inject';
 import logger from './logger';
+import { writeEdgesToDisk, writeNodesToDisk } from './csv';
 
 function groupInputFiles(newFile: string, allFiles: string[]) {
   allFiles.push(newFile);
@@ -13,7 +14,9 @@ function groupInputFiles(newFile: string, allFiles: string[]) {
 program
   .name('npm run transform')
   .description('Small tool to parse OutSystems architecture/dependency datasets into ')
-  .option('-s, --seed', 'seed the resulting graph the Neo4j database')
+  .option('-s, --seedLocal <Neo4jHomeDir>', 'seed the resulting graph the Neo4j database, which can be found at the given Neo4j home directory')
+  .option('--seedRemotePassword <password>', 'seed the resulting graph the Neo4j database, which can be accessed using the given password')
+  .option('--seedRemoteUrl <password>', 'seed the resulting graph the Neo4j database, which can be found at the given url (optional)')
   .option('-j, --json', 'output the resulting graph as a .json file')
   .option('-c, --csv', 'output the resulting graph as a .csv file with nodes and a .csv file with edges')
   .option('-l, --layer', 'include "layer" nodes in the resulting graph')
@@ -33,21 +36,25 @@ logger.info('Graph successfully validated');
 
 if (options.json) {
   fs.writeFileSync('graph.json', JSON.stringify(graph, null, 4));
+  logger.info('Graph written to .json file');
 }
-if (options.csv) {
-  fs.writeFileSync('nodes.csv', graph.elements.nodes
-    .map((n) => [n.data.id, n.data.labels[0]].map((x) => x.toString()).join(';'))
-    .join('\n'));
-  fs.writeFileSync('relationships.csv', graph.elements.edges
-    .map((n) => [n.data.id, n.data.label, n.data.source, n.data.target].map((x) => x.toString()).join(';'))
-    .join('\n'));
-}
-if (options.json || options.csv) {
-  logger.info('Graph written to disk');
+if (options.csv || options.seedLocal) {
+  writeNodesToDisk(graph.elements.nodes);
+  writeEdgesToDisk(graph.elements.edges);
+  logger.info('Graph written to .csv files');
 }
 
-if (options.seed) {
-  injectGraph(graph).then(() => {
+if (options.seedLocal) {
+  logger.info('Start seeding to Neo4j database...');
+  importGraphIntoNeo4j(options.seedLocal);
+  logger.info('Seeded to Neo4j database!');
+}
+
+if (options.seedRemotePassword) {
+  injectGraph(graph, options.seedRemotePassword, options.seedRemoteUrl).then(() => {
+    logger.info('Tasks finished. Exit.');
     process.exit(0);
   });
+} else {
+  logger.info('Tasks finished. Exit.');
 }
