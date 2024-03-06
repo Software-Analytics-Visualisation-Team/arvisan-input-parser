@@ -1,4 +1,6 @@
-import { Edge, Graph, Node } from './structure';
+import {
+  Edge, Graph, GraphLayers, Node,
+} from './structure';
 
 /**
  * Helper function to check if a node exists
@@ -32,6 +34,30 @@ export function validateGraph(graph: Graph) {
     }
   });
 
+  // Check correct labels for domain nodes
+  graph.elements.nodes.filter((n) => n.data.id.startsWith('D_'))
+    .forEach((n) => {
+      if (n.data.labels.length !== 1 || n.data.labels[0] !== GraphLayers.DOMAIN) {
+        throw new Error(`Domain node ${n.data.id} does not have a single "Domain" label (has ${n.data.labels.toString()} instead).`);
+      }
+    });
+
+  // Check correct labels for application nodes
+  graph.elements.nodes.filter((n) => n.data.id.startsWith('A_') && !n.data.id.includes('__'))
+    .forEach((n) => {
+      if (n.data.labels.length !== 1 || n.data.labels[0] !== GraphLayers.APPLICATION) {
+        throw new Error(`Application node ${n.data.id} does not have a single "Application" label (has ${n.data.labels.toString()} instead).`);
+      }
+    });
+
+  // Check correct labels for module nodes
+  graph.elements.nodes.filter((n) => n.data.id.startsWith('A_') && n.data.id.includes('__M_'))
+    .forEach((n) => {
+      if (n.data.labels.length !== 1 || n.data.labels[0] !== GraphLayers.MODULE) {
+        throw new Error(`Module node ${n.data.id} does not have a single "Module" label (has ${n.data.labels.toString()} instead).`);
+      }
+    });
+
   graph.elements.edges.forEach((e, i, all) => {
     // Every edge should have a unique ID
     if (all.filter((e2) => e2.data.id === e.data.id).length > 1) {
@@ -47,8 +73,17 @@ export function validateGraph(graph: Graph) {
       throw new Error(`Source node with ID ${e.data.target} does not exist!`);
     }
 
+    // Dependency edges have a corresponding type
     if (e.data.label !== 'contains' && e.data.properties.dependencyType === undefined) {
       throw new Error(`Dependency edge ${e.data.id} with source ${e.data.source} and target ${e.data.target} has no dependency type`);
+    }
+
+    // Every node has at most one incoming containment edge
+    if (e.data.label === 'contains') {
+      const matchIndex = all.findIndex((e2) => e2.data.target === e.data.target && e2.data.label === 'contains');
+      if (matchIndex !== i) {
+        throw new Error(`Target node ${e.data.target} has at least two incoming containment edges: ${e.data.id} and ${all[matchIndex].data.id}`);
+      }
     }
   });
 }
