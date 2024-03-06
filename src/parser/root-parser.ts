@@ -3,7 +3,7 @@ import {
   Edge,
   EndUserLayerSublayers,
   formatName,
-  formatName as format, FoundationLayerSublayers, Graph,
+  formatName as format, FoundationLayerSublayers,
   GraphLayers,
   moduleColors,
   ModuleLayers,
@@ -34,13 +34,19 @@ export default class RootParser {
     return format(`A_${applicationName}`);
   }
 
-  protected getApplicationWithLayersId(
-    applicationName: string,
-    layer?: ModuleLayers,
-    sublayer?: ModuleSublayer,
+  protected getApplicationWithLayerId(applicationId: string, layer?: ModuleLayers | string) {
+    if (!layer) return applicationId;
+    return format(`${applicationId}__${layer}`);
+  }
+
+  protected getApplicationWithSublayerId(
+    applicationId: string,
+    layer?: ModuleLayers | string,
+    sublayer?: ModuleSublayer | string,
   ) {
-    if (!layer || !sublayer) return this.getApplicationId(applicationName);
-    return format(`A_${applicationName}__${layer}_${sublayer}`);
+    const applicationWithLayerId = this.getApplicationWithLayerId(applicationId, layer);
+    if (!sublayer) return applicationWithLayerId;
+    return format(`${applicationWithLayerId}__${sublayer}`);
   }
 
   protected getModuleId(applicationName: string, moduleName: string) {
@@ -141,7 +147,7 @@ export default class RootParser {
         if (includeModuleLayerLayer) {
           layerNode = {
             data: {
-              id: formatName(`${applicationNode.data.id}__${layer}`),
+              id: this.getApplicationWithLayerId(applicationNode.data.id, layer),
               properties: {
                 fullName: `Layer_${layer}`,
                 simpleName: layer,
@@ -153,7 +159,7 @@ export default class RootParser {
           };
           const layerEdge: Edge = {
             data: {
-              id: formatName(`${applicationNode.data.id}__${layer}__contains`),
+              id: formatName(`${layerNode.data.id}__contains`),
               source: applicationNode.data.id,
               target: layerNode.data.id,
               properties: {
@@ -181,7 +187,7 @@ export default class RootParser {
         subLayerKeys.forEach((subLayer) => {
           const subLayerNode: Node = ({
             data: {
-              id: formatName(`${applicationNode.data.id}__${layer}_${subLayer}`),
+              id: this.getApplicationWithSublayerId(applicationNode.data.id, layer, subLayer),
               properties: {
                 fullName: `Sublayer_${subLayer}`,
                 simpleName: subLayer,
@@ -194,7 +200,7 @@ export default class RootParser {
 
           const subLayerEdge: Edge = ({
             data: {
-              id: formatName(`${applicationNode.data.id}__${layer}_${subLayer}__contains`),
+              id: formatName(`${subLayerNode.data.id}__contains`),
               source: layerNode ? layerNode.data.id : applicationNode.data.id,
               target: subLayerNode.data.id,
               properties: {

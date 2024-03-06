@@ -21,7 +21,7 @@ export function writeEdgesToDisk(edges: Edge[]) {
   const rows = edges
     .map((n) => [
       n.data.id,
-      n.data.label,
+      n.data.label.toUpperCase(),
       n.data.source,
       n.data.target,
       n.data.properties.referenceType,
