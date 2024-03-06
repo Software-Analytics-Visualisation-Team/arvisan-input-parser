@@ -1,3 +1,11 @@
+export enum GraphLayers {
+  DOMAIN = 'Domain',
+  APPLICATION = 'Application',
+  LAYER = 'Layer',
+  SUB_LAYER = 'SubLayer',
+  MODULE = 'Module',
+}
+
 export enum ModuleLayers {
   END_USER = 'Enduser',
   CORE = 'Core',
@@ -35,9 +43,8 @@ export interface Node {
   data: {
     id: string;
     properties: {
+      fullName: string;
       simpleName: string;
-      kind: string;
-      traces: string[];
       color: string;
       depth: number;
     }
@@ -60,6 +67,7 @@ export interface Edge {
     properties: {
       referenceType: string;
       dependencyType?: DependencyType;
+      weight?: number;
     }
   }
 }
@@ -74,7 +82,7 @@ export interface Graph {
 export function formatName(id: string) {
   return id
     .replaceAll(' ', '_')
-    .replaceAll('-', '__')
+    .replaceAll('-', '_')
     .replaceAll('&', 'and')
     .replaceAll('/', '')
     .replaceAll('+', 'plus')

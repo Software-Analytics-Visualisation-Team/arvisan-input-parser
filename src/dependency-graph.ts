@@ -145,8 +145,7 @@ function getNodes<T>(
         properties: {
           ...properties,
           simpleName: createName ? createName(e) : id,
-          kind: 'node',
-          traces: [],
+          fullName: createName ? createName(e) : id,
         },
         labels: [layerName],
       },
@@ -176,9 +175,8 @@ function getApplicationModuleLayerNodesAndEdges(
           data: {
             id: format(`${applicationNode.data.id}__${layer}`),
             properties: {
-              simpleName: `layer_${layer}`,
-              kind: 'layer',
-              traces: [],
+              simpleName: `${layer}`,
+              fullName: `layer_${layer}`,
               color: moduleColors[layer],
               depth: 3,
             },
@@ -215,9 +213,8 @@ function getApplicationModuleLayerNodesAndEdges(
           data: {
             id: format(`${applicationNode.data.id}__${layer}_${subLayer}`),
             properties: {
-              simpleName: `Sublayer_${subLayer}`,
-              kind: 'layer',
-              traces: [],
+              simpleName: `${subLayer}`,
+              fullName: `Sublayer_${subLayer}`,
               color: moduleColors[layer],
               depth: 3,
             },

@@ -1,6 +1,6 @@
 import { program } from 'commander';
 import fs from 'fs';
-import getGraph from './dependency-graph';
+import getGraph from './parser';
 import { validateGraph } from './graph';
 import injectGraph from './neo4j-inject';
 import logger from './logger';
@@ -27,6 +27,7 @@ const options = program.opts();
 const graph = getGraph(options.grouping, options.dependencies, !!options.layer);
 logger.info(`Generated LPG with ${graph.elements.nodes.length} nodes and ${graph.elements.edges.length} edges.`);
 
+logger.info('Validating graph...');
 validateGraph(graph);
 logger.info('Graph successfully validated');
 
