@@ -54,6 +54,48 @@ export default class RootParser {
   }
 
   /**
+   * Given the name of a module, extract the type of module based on its extension
+   * If no explicit defined extension, the module will be of layer Enduser
+   * @param moduleName
+   */
+  private moduleSuffixToLayers(moduleName: string): {
+    layer: ModuleLayers, sublayer: ModuleSublayer,
+  } {
+    const suffix = moduleName.split('_').pop()?.toLowerCase();
+    switch (suffix) {
+      case 'api':
+        return { layer: ModuleLayers.CORE, sublayer: CoreLayerSublayers.API };
+      case 'cw':
+        return { layer: ModuleLayers.CORE, sublayer: CoreLayerSublayers.CORE_WIDGETS };
+      case 'cs':
+        return { layer: ModuleLayers.CORE, sublayer: CoreLayerSublayers.CORE_SERVICE };
+      case 'bl':
+        return { layer: ModuleLayers.CORE, sublayer: CoreLayerSublayers.COMPOSITE_LOGIC };
+      case 'theme':
+      case 'thm':
+      case 'th':
+        return { layer: ModuleLayers.FOUNDATION, sublayer: FoundationLayerSublayers.STYLE_GUIDE };
+      case 'is':
+        return {
+          layer: ModuleLayers.FOUNDATION,
+          sublayer: FoundationLayerSublayers.FOUNDATION_SERVICE,
+        };
+      case 'lib':
+        return { layer: ModuleLayers.FOUNDATION, sublayer: FoundationLayerSublayers.LIBRARY };
+      default: break;
+    }
+
+    const prefix = moduleName.split('_').shift()?.toLowerCase();
+    switch (prefix) {
+      case 'cdm':
+        return { layer: ModuleLayers.FOUNDATION, sublayer: FoundationLayerSublayers.LIBRARY };
+      default: break;
+    }
+
+    return { layer: ModuleLayers.END_USER, sublayer: EndUserLayerSublayers.END_USER };
+  }
+
+  /**
    * Create a domain node
    * @param domainName
    */
@@ -71,7 +113,7 @@ export default class RootParser {
           fullName: id,
           simpleName: domainName,
           color: '#7B7D7D',
-          depth: 1,
+          depth: 0,
         },
         labels: [GraphLayers.DOMAIN],
       },
@@ -252,7 +294,11 @@ export default class RootParser {
     let filteredNodes = this.nodes.filter((n) => {
       if (!n.data.labels.includes(GraphLayers.SUB_LAYER)) return true;
       // SubLayer node contains at least one module. If not, remove the node.
-      return this.containEdges.some((e) => e.data.source === n.data.id);
+      const hasChild = this.containEdges.some((e) => e.data.source === n.data.id);
+      if (n.data.id.includes('A_MyVopak2')) {
+        console.log('break');
+      }
+      return hasChild;
     });
     let filteredEdges = this.containEdges.filter((e) => filteredNodes
       // All contain edges have a target node. We are specifically looking for nodes
@@ -274,5 +320,79 @@ export default class RootParser {
     this.containEdges = filteredEdges;
 
     return { filteredNodes, filteredEdges };
+  }
+
+  /**
+   * Given a application with one of its module, return any new application nodes,
+   * module nodes, and (sub)layer nodes with their containment edges
+   * @param applicationName
+   * @param moduleName
+   * @param includeModuleLayerLayer
+   * @param domainNode Optional domain node belonging to this application/module
+   * @private
+   * @returns Module node
+   */
+  protected getApplicationAndModule(
+    applicationName: string,
+    moduleName: string,
+    includeModuleLayerLayer: boolean,
+    domainNode?: Node,
+  ): Node {
+    const appId = this.getApplicationId(applicationName);
+    let appNode = this.getNode(appId);
+    if (!appNode) {
+      appNode = this.createApplicationNode(applicationName);
+
+      if (domainNode) {
+        const domainContainEdge = this.createContainEdge(domainNode, appNode);
+        this.containEdges.push(domainContainEdge);
+      }
+
+      const {
+        nodes: layerNodes, edges: layerEdges,
+      } = this.getApplicationModuleLayerNodesAndEdges([appNode], includeModuleLayerLayer);
+      this.nodes.push(appNode, ...layerNodes);
+      this.containEdges.push(...layerEdges);
+    }
+
+    const moduleId = this.getModuleId(applicationName, moduleName);
+    let moduleNode = this.getNode(moduleId);
+    if (!moduleNode) {
+      moduleNode = this.createModuleNode(applicationName, moduleName);
+
+      const {
+        layer: moduleLayer,
+        sublayer: moduleSublayer,
+      } = this.moduleSuffixToLayers(moduleName);
+      const parentId = this.getApplicationWithSublayerId(appId, moduleLayer, moduleSublayer);
+      const parentNode = this.getNode(parentId);
+      if (!parentNode) {
+        throw new Error(`Parent node with ID ${parentId} not found.`);
+      }
+
+      const containsEdge = this.createContainEdge(parentNode, moduleNode);
+
+      this.nodes.push(moduleNode);
+      this.containEdges.push(containsEdge);
+    }
+
+    return moduleNode;
+  }
+
+  /**
+   * Color the child nodes based on what "contain" edge they have.
+   * @param childNodes
+   */
+  protected colorNodeBasedOnParent(childNodes: Node[]): void {
+    childNodes.forEach((moduleNode) => {
+      const containEdge = this.containEdges.find((e) => e.data.target === moduleNode.data.id && e.data.label === 'contains');
+      if (!containEdge) return;
+
+      const parentNode = this.nodes.find((n) => n.data.id === containEdge.data.source);
+      if (!parentNode) return;
+
+      // eslint-disable-next-line no-param-reassign
+      moduleNode.data.properties.color = parentNode.data.properties.color;
+    });
   }
 }
