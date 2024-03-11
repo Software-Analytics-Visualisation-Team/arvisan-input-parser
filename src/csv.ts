@@ -1,9 +1,9 @@
 import fs from 'fs';
 import {
-  Edge, EdgeProperties, Node, NodeProperties,
+  Edge, EdgeProperties, Graph, Node, NodeProperties,
 } from './structure';
 
-export function writeNodesToDisk(nodes: Node[]) {
+export function writeNodesToDisk(nodes: Node[], fileName = 'nodes.csv', header = true) {
   const headers: ('id:ID' | ':LABEL' | keyof NodeProperties)[] = ['id:ID', ':LABEL', 'fullName', 'simpleName', 'color', 'depth:INT' as 'depth'];
   const rows = nodes
     .map((n) => [
@@ -14,10 +14,14 @@ export function writeNodesToDisk(nodes: Node[]) {
       n.data.properties.color,
       n.data.properties.depth,
     ].map((x) => x.toString()).join(','));
-  fs.writeFileSync('nodes.csv', [headers, ...rows].join('\r\n'));
+  if (header) {
+    fs.writeFileSync(fileName, [headers, ...rows].join('\r\n'));
+  } else {
+    fs.writeFileSync(fileName, rows.join('\r\n'));
+  }
 }
 
-export function writeEdgesToDisk(edges: Edge[]) {
+export function writeEdgesToDisk(edges: Edge[], fileName = 'relationships.csv', header = true) {
   const headers: ('id' | ':TYPE' | ':START_ID' | ':END_ID' | keyof EdgeProperties)[] = ['id', ':TYPE', ':START_ID', ':END_ID', 'referenceType', 'dependencyType', 'weight'];
   const rows = edges
     .map((n) => [
@@ -29,5 +33,14 @@ export function writeEdgesToDisk(edges: Edge[]) {
       n.data.properties.dependencyType,
       n.data.properties.weight,
     ].map((x) => x?.toString() ?? '').join(','));
-  fs.writeFileSync('relationships.csv', [headers, ...rows].join('\r\n'));
+  if (header) {
+    fs.writeFileSync(fileName, [headers, ...rows].join('\r\n'));
+  } else {
+    fs.writeFileSync(fileName, rows.join('\r\n'));
+  }
+}
+
+export default function graphToCsv(graph: Graph, name?: string, header = true) {
+  writeNodesToDisk(graph.elements.nodes, name ? `${name}-nodes.csv` : undefined, header);
+  writeEdgesToDisk(graph.elements.edges, name ? `${name}-relationships.csv` : undefined, header);
 }

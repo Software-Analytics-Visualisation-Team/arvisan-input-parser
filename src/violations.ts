@@ -19,8 +19,7 @@ function createSublayerNodes(layer: ModuleLayers, sublayers: string[]): Node[] {
       labels: [getName(sublayer)],
       properties: {
         fullName: getName(sublayer),
-        kind: 'node',
-        traces: [],
+        simpleName: getName(sublayer),
         color: moduleColors[layer],
         depth: -1,
       },

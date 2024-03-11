@@ -4,7 +4,9 @@ import getGraph from './parser';
 import { validateGraph } from './graph';
 import injectGraph, { importGraphIntoNeo4j } from './neo4j-inject';
 import logger from './logger';
-import { writeEdgesToDisk, writeNodesToDisk } from './csv';
+import graphToCsv from './csv';
+import { getViolationsAsGraph } from './violations';
+import { Graph } from './structure';
 
 function groupInputFiles(newFile: string, allFiles: string[]) {
   allFiles.push(newFile);
@@ -28,6 +30,7 @@ program.parse();
 const options = program.opts();
 
 const graph = getGraph(options.grouping, options.dependencies, !!options.layer);
+const violations = getViolationsAsGraph();
 logger.info(`Generated LPG with ${graph.elements.nodes.length} nodes and ${graph.elements.edges.length} edges.`);
 
 logger.info('Validating graph...');
@@ -39,8 +42,13 @@ if (options.json) {
   logger.info('Graph written to .json file');
 }
 if (options.csv || options.seedLocal) {
-  writeNodesToDisk(graph.elements.nodes);
-  writeEdgesToDisk(graph.elements.edges);
+  const totalGraph: Graph = {
+    elements: {
+      nodes: [...graph.elements.nodes, ...violations.elements.nodes],
+      edges: [...graph.elements.edges, ...violations.elements.edges],
+    },
+  };
+  graphToCsv(totalGraph);
   logger.info('Graph written to .csv files');
 }
 

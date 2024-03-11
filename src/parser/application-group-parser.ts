@@ -14,10 +14,6 @@ export default class ApplicationGroupParser extends RootParser {
       // be part of only one domain. Therefore, skip this entry (quick 'n dirty fix)
       if (i !== foundIndex) return;
 
-      if (e.ApplicationName === 'MyVopak2') {
-        console.log('break');
-      }
-
       const domainId = this.getDomainId(e.ApplicationGroupName);
       let domainNode = this.getNode(domainId);
       if (domainNode == null) {

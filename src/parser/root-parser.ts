@@ -3,7 +3,8 @@ import {
   Edge,
   EndUserLayerSublayers,
   formatName,
-  formatName as format, FoundationLayerSublayers,
+  formatName as format,
+  FoundationLayerSublayers,
   GraphLayers,
   moduleColors,
   ModuleLayers,
@@ -294,11 +295,7 @@ export default class RootParser {
     let filteredNodes = this.nodes.filter((n) => {
       if (!n.data.labels.includes(GraphLayers.SUB_LAYER)) return true;
       // SubLayer node contains at least one module. If not, remove the node.
-      const hasChild = this.containEdges.some((e) => e.data.source === n.data.id);
-      if (n.data.id.includes('A_MyVopak2')) {
-        console.log('break');
-      }
-      return hasChild;
+      return this.containEdges.some((e) => e.data.source === n.data.id);
     });
     let filteredEdges = this.containEdges.filter((e) => filteredNodes
       // All contain edges have a target node. We are specifically looking for nodes

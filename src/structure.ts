@@ -2,7 +2,7 @@ export enum GraphLayers {
   DOMAIN = 'Domain',
   APPLICATION = 'Application',
   LAYER = 'Layer',
-  SUB_LAYER = 'SubLayer',
+  SUB_LAYER = 'Sublayer',
   MODULE = 'Module',
 }
 
