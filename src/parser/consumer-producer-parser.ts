@@ -23,22 +23,23 @@ export default class ConsumerProducerParser extends RootParser {
       const dependencyEdgeId = `${consModuleNode.data.id}__${prodModuleNode.data.id}`;
       const dependencyEdge = this.getDependencyEdge(dependencyEdgeId);
 
-      if (dependencyEdge != null && dependencyEdge.data.properties.nrDependencies) {
-        dependencyEdge.data.properties.nrDependencies += 1;
-      } else if (dependencyEdge == null) {
-        const dependencyType = consumerTypeToDependencyType(entry['Reference Name']);
-
-        let nrCalls: number | undefined;
-        if (dependencyType === DependencyType.WEAK) {
+      const dependencyType = consumerTypeToDependencyType(entry['Reference Name']);
+      let nrCalls: number | undefined;
+      if (dependencyType === DependencyType.WEAK) {
+        nrCalls = 0;
+        const serviceAPIEntry = filteredServiceAPIEntries.find((e) => e.EndpointAndMethod === entry['Reference Kind']);
+        if (serviceAPIEntry) {
+          nrCalls = serviceAPIEntry.count;
+        } else {
           nrCalls = 0;
-          const serviceAPIEntry = filteredServiceAPIEntries.find((e) => e.EndpointAndMethod === entry['Reference Kind']);
-          if (serviceAPIEntry) {
-            nrCalls = serviceAPIEntry.count;
-          } else {
-            nrCalls = 0;
-          }
         }
+      }
 
+      if (!!dependencyEdge && dependencyEdge.data.properties.nrDependencies != null) {
+        dependencyEdge.data.properties.nrDependencies += 1;
+      } else if (!!dependencyEdge && dependencyEdge.data.properties.nrCalls != null && nrCalls) {
+        dependencyEdge.data.properties.nrCalls += nrCalls;
+      } else if (dependencyEdge == null) {
         this.dependencyEdges.push({
           data: {
             id: dependencyEdgeId,
