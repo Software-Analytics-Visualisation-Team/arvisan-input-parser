@@ -22,19 +22,27 @@ export function writeNodesToDisk(nodes: Node[], fileName = 'nodes.csv', header =
 }
 
 export function writeEdgesToDisk(edges: Edge[], fileName = 'relationships.csv', header = true) {
-  const headers: ('id' | ':TYPE' | ':START_ID' | ':END_ID' | keyof EdgeProperties)[] = ['id', ':TYPE', ':START_ID', ':END_ID', 'referenceType', 'dependencyType', 'referenceName', 'nrDependencies', 'nrCalls'];
+  const headers: ('id' | ':TYPE' | ':START_ID' | ':END_ID' | keyof EdgeProperties)[] = ['id', ':TYPE', ':START_ID', ':END_ID', 'referenceType', 'dependencyType', 'referenceNames', 'nrDependencies:INT' as 'nrDependencies', 'nrCalls:INT' as 'nrCalls'];
   const rows = edges
-    .map((n) => [
+    .map((n) => ([
       n.data.id,
       n.data.label.toUpperCase(),
       n.data.source,
       n.data.target,
       n.data.properties.referenceType,
       n.data.properties.dependencyType,
-      n.data.properties.referenceName,
+      n.data.properties.referenceNames.join('|'),
       n.data.properties.nrDependencies,
       n.data.properties.nrCalls,
-    ].map((x) => x?.toString() ?? '').join(','));
+    ]))
+    .map((row) => {
+      if (row.length !== headers.length) {
+        throw new Error(`Row ${row} does not have the correct amount of columns`);
+      }
+      return row;
+    })
+    .map((x) => x.join(','));
+
   if (header) {
     fs.writeFileSync(fileName, [headers, ...rows].join('\r\n'));
   } else {

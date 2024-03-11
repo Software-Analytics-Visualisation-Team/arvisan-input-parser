@@ -23,11 +23,11 @@ export default class ConsumerProducerParser extends RootParser {
       const dependencyEdgeId = `${consModuleNode.data.id}__${prodModuleNode.data.id}`;
       const dependencyEdge = this.getDependencyEdge(dependencyEdgeId);
 
-      const dependencyType = consumerTypeToDependencyType(entry['Reference Name']);
+      const dependencyType = consumerTypeToDependencyType(entry['Reference Kind']);
       let nrCalls: number | undefined;
       if (dependencyType === DependencyType.WEAK) {
         nrCalls = 0;
-        const serviceAPIEntry = filteredServiceAPIEntries.find((e) => e.EndpointAndMethod === entry['Reference Kind']);
+        const serviceAPIEntry = filteredServiceAPIEntries.find((e) => e.EndpointAndMethod === entry['Reference Name']);
         if (serviceAPIEntry) {
           nrCalls = serviceAPIEntry.count;
         } else {
@@ -35,10 +35,14 @@ export default class ConsumerProducerParser extends RootParser {
         }
       }
 
-      if (!!dependencyEdge && dependencyEdge.data.properties.nrDependencies != null) {
-        dependencyEdge.data.properties.nrDependencies += 1;
-      } else if (!!dependencyEdge && dependencyEdge.data.properties.nrCalls != null && nrCalls) {
-        dependencyEdge.data.properties.nrCalls += nrCalls;
+      if (dependencyEdge != null) {
+        if (dependencyEdge.data.properties.nrDependencies != null) {
+          dependencyEdge.data.properties.nrDependencies += 1;
+        }
+        if (dependencyEdge.data.properties.nrCalls != null && nrCalls) {
+          dependencyEdge.data.properties.nrCalls += nrCalls;
+        }
+        dependencyEdge.data.properties.referenceNames.push(entry['Reference Name']);
       } else if (dependencyEdge == null) {
         this.dependencyEdges.push({
           data: {
@@ -47,8 +51,8 @@ export default class ConsumerProducerParser extends RootParser {
             target: prodModuleNode.data.id,
             label: 'calls',
             properties: {
-              referenceType: entry['Reference Name'],
-              referenceName: entry['Reference Kind'],
+              referenceType: entry['Reference Kind'],
+              referenceNames: [entry['Reference Name']],
               dependencyType,
               nrDependencies: 1,
               nrCalls,

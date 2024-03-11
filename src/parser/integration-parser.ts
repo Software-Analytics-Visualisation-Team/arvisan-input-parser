@@ -38,7 +38,9 @@ export default class IntegrationParser extends RootParser {
   }
 
   /**
-   * Parse a set of integrations that likely belong together as a set of dependencies
+   * Parse a set of integrations that likely belong together as a set of dependencies.
+   * Each group has exactly one REST (Expose) entry (the producer) and one or more
+   * REST (Consume) entries (the consumers)
    * @param group
    * @private
    */
@@ -70,6 +72,7 @@ export default class IntegrationParser extends RootParser {
         if (dependencyEdge.data.properties.nrCalls != null) {
           dependencyEdge.data.properties.nrCalls += consumer.count;
         }
+        dependencyEdge.data.properties.referenceNames.push(consumer.EndpointAndMethod);
       } else {
         this.dependencyEdges.push({
           data: {
@@ -79,7 +82,7 @@ export default class IntegrationParser extends RootParser {
             label: 'calls',
             properties: {
               referenceType: 'Integration',
-              referenceName: consumer.EndpointAndMethod,
+              referenceNames: [consumer.EndpointAndMethod],
               dependencyType: DependencyType.WEAK,
               nrDependencies: 1,
               nrCalls: consumer.count,

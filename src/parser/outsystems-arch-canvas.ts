@@ -12,8 +12,8 @@ export interface ConsumerProducerEntry {
   'Cons Espace': string // Consumer module
   'Prod Application': string // Consumer application
   'Prod Espace': string // Consumer module
-  'Reference Name': string
   'Reference Kind': string
+  'Reference Name': string
   'Reference SS Key': string
 }
 
