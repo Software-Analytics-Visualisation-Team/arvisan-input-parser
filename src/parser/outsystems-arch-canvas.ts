@@ -55,6 +55,11 @@ export function consumerTypeToDependencyType(kind: string): DependencyType {
     case 'FlowExceptionHandlingFlow': return DependencyType.STRONG;
     case 'ServiceAPIMethod': return DependencyType.WEAK;
     case 'Process': return DependencyType.STRONG;
+
+    case 'Integration': return DependencyType.WEAK; // Does not exist in OutSystems consumer-producer datasets,
+      // but is included here for completeness’s sake. The integration dataset should be provided
+      // separately and is parsed by the IntegrationParser.
+
     default: throw new Error(`Unknown consumer type: ${kind}`);
   }
 }

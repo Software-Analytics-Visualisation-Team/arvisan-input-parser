@@ -78,7 +78,8 @@ export default class IntegrationParser extends RootParser {
             target: prodModuleNode.data.id,
             label: 'calls',
             properties: {
-              referenceType: consumer.EndpointAndMethod,
+              referenceType: 'Integration',
+              referenceName: consumer.EndpointAndMethod,
               dependencyType: DependencyType.WEAK,
               nrDependencies: 1,
               nrCalls: consumer.count,

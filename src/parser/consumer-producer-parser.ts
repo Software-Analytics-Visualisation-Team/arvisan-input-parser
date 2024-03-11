@@ -1,12 +1,22 @@
 import { DependencyType, GraphLayers } from '../structure';
-import { ConsumerProducerEntry, consumerTypeToDependencyType } from './outsystems-arch-canvas';
+import {
+  ConsumerProducerEntry,
+  consumerTypeToDependencyType,
+  IntegrationServiceAPIEntry,
+} from './outsystems-arch-canvas';
 import RootParser from './root-parser';
 
 export default class ConsumerProducerParser extends RootParser {
-  constructor(entries: ConsumerProducerEntry[], includeModuleLayerLayer: boolean) {
+  constructor(
+    consumerProducerEntries: ConsumerProducerEntry[],
+    includeModuleLayerLayer: boolean,
+    serviceAPIEntries: IntegrationServiceAPIEntry[] = [],
+  ) {
     super(includeModuleLayerLayer);
 
-    entries.forEach((entry) => {
+    const filteredServiceAPIEntries = serviceAPIEntries.filter((e) => e.logtype === 'ServiceAPI');
+
+    consumerProducerEntries.forEach((entry) => {
       const prodModuleNode = this.getApplicationAndModule(entry['Prod Application'], entry['Prod Espace']);
       const consModuleNode = this.getApplicationAndModule(entry['Cons Application'], entry['Cons Espace']);
 
@@ -17,6 +27,18 @@ export default class ConsumerProducerParser extends RootParser {
         dependencyEdge.data.properties.nrDependencies += 1;
       } else if (dependencyEdge == null) {
         const dependencyType = consumerTypeToDependencyType(entry['Reference Name']);
+
+        let nrCalls: number | undefined;
+        if (dependencyType === DependencyType.WEAK) {
+          nrCalls = 0;
+          const serviceAPIEntry = filteredServiceAPIEntries.find((e) => e.EndpointAndMethod === entry['Reference Kind']);
+          if (serviceAPIEntry) {
+            nrCalls = serviceAPIEntry.count;
+          } else {
+            nrCalls = 0;
+          }
+        }
+
         this.dependencyEdges.push({
           data: {
             id: dependencyEdgeId,
@@ -25,9 +47,10 @@ export default class ConsumerProducerParser extends RootParser {
             label: 'calls',
             properties: {
               referenceType: entry['Reference Name'],
+              referenceName: entry['Reference Kind'],
               dependencyType,
               nrDependencies: 1,
-              nrCalls: dependencyType === DependencyType.WEAK ? 0 : undefined,
+              nrCalls,
             },
           },
         });

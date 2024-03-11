@@ -41,14 +41,20 @@ export default function getGraph(
       .sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]))
     .flat();
 
-  const integrationWorkbook = integrationFile ? readFile(integrationFile) : undefined;
-  const integrationEntries: IntegrationServiceAPIEntry[] | undefined = integrationWorkbook ? utils
-    .sheet_to_json(integrationWorkbook.Sheets[applicationWorkbook.SheetNames[0]]) : undefined;
+  const dynamicDataWorkbook = integrationFile ? readFile(integrationFile) : undefined;
+  const dynamicDataEntries: IntegrationServiceAPIEntry[] | undefined = dynamicDataWorkbook ? utils
+    .sheet_to_json(dynamicDataWorkbook.Sheets[applicationWorkbook.SheetNames[0]]) : undefined;
+  const integrationEntries = dynamicDataEntries ? dynamicDataEntries.filter((e) => e.logtype === 'Integration') : undefined;
+  const serviceAPIEntries = dynamicDataEntries ? dynamicDataEntries.filter((e) => e.logtype === 'ServiceAPI') : undefined;
 
   logger.info('Loaded files!');
 
   logger.info('Parsing consumer/producer datasets...');
-  const cpParser = new ConsumerProducerParser(consumerProducerEntries, includeModuleLayerLayer);
+  const cpParser = new ConsumerProducerParser(
+    consumerProducerEntries,
+    includeModuleLayerLayer,
+    serviceAPIEntries,
+  );
   logger.info('Parsed consumer/producer datasets!');
 
   logger.info('Parsing application group dataset...');

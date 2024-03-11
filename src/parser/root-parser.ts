@@ -210,6 +210,7 @@ export default class RootParser {
               target: layerNode.data.id,
               properties: {
                 referenceType: 'Contains',
+                referenceName: 'Contains',
               },
               label: 'contains',
             },
@@ -251,6 +252,7 @@ export default class RootParser {
               target: subLayerNode.data.id,
               properties: {
                 referenceType: 'Contains',
+                referenceName: 'Contains',
               },
               label: 'contains',
             },
@@ -283,6 +285,7 @@ export default class RootParser {
         label: 'contains',
         properties: {
           referenceType: 'Contains',
+          referenceName: 'Contains',
         },
       },
     };
