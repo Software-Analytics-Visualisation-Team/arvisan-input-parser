@@ -1,6 +1,4 @@
-import {
-  GraphLayers, Node,
-} from '../structure';
+import { DependencyType, GraphLayers } from '../structure';
 import { ConsumerProducerEntry, consumerTypeToDependencyType } from './outsystems-arch-canvas';
 import RootParser from './root-parser';
 
@@ -14,9 +12,10 @@ export default class ConsumerProducerParser extends RootParser {
       const dependencyEdgeId = `${consModuleNode.data.id}__${prodModuleNode.data.id}`;
       const dependencyEdge = this.getDependencyEdge(dependencyEdgeId);
 
-      if (dependencyEdge != null && dependencyEdge.data.properties.weight) {
-        dependencyEdge.data.properties.weight += 1;
+      if (dependencyEdge != null && dependencyEdge.data.properties.nrDependencies) {
+        dependencyEdge.data.properties.nrDependencies += 1;
       } else if (dependencyEdge == null) {
+        const dependencyType = consumerTypeToDependencyType(entry['Reference Name']);
         this.dependencyEdges.push({
           data: {
             id: dependencyEdgeId,
@@ -25,7 +24,9 @@ export default class ConsumerProducerParser extends RootParser {
             label: 'calls',
             properties: {
               referenceType: entry['Reference Name'],
-              dependencyType: consumerTypeToDependencyType(entry['Reference Name']),
+              dependencyType,
+              nrDependencies: 1,
+              nrCalls: dependencyType === DependencyType.WEAK ? 0 : undefined,
             },
           },
         });

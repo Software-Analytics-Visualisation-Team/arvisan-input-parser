@@ -23,13 +23,19 @@ program
   .option('-c, --csv', 'output the resulting graph as a .csv file with nodes and a .csv file with edges')
   .option('-l, --layer', 'include "layer" nodes in the resulting graph')
   .requiredOption('-g, --grouping <file>', 'location of domain (application group) dataset')
-  .requiredOption('-d, --dependencies <files>', 'one or more locations of dependency dataset(s)', groupInputFiles, []);
+  .requiredOption('-d, --dependencies <files>', 'one or more locations of dependency dataset(s)', groupInputFiles, [])
+  .option('-i, --integrations <file>', 'location of integration/service API dataset');
 
 program.parse();
 
 const options = program.opts();
 
-const graph = getGraph(options.grouping, options.dependencies, !!options.layer);
+const graph = getGraph(
+  options.grouping,
+  options.dependencies,
+  options.integrations,
+  !!options.layer,
+);
 const violations = getViolationsAsGraph();
 logger.info(`Generated LPG with ${graph.elements.nodes.length} nodes and ${graph.elements.edges.length} edges.`);
 

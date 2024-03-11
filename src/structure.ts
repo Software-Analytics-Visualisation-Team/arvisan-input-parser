@@ -63,7 +63,8 @@ export enum DependencyType {
 export interface EdgeProperties {
   referenceType: string;
   dependencyType?: DependencyType;
-  weight?: number;
+  nrDependencies?: number;
+  nrCalls?: number;
 }
 
 export interface Edge {

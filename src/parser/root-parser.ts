@@ -286,7 +286,8 @@ export default class RootParser {
   }
 
   /**
-   * Trim the parser's of nodes and containment edges of (sub)layer nodes without any children
+   * Remove nodes and containment edges of (sub)layer nodes without any children in-place.
+   * @returns new set of nodes and containment edges.
    */
   public trim(): { filteredNodes: Node[], filteredEdges: Edge[] } {
     /*
@@ -322,9 +323,10 @@ export default class RootParser {
   /**
    * Given a application with one of its module, return any new application nodes,
    * module nodes, and (sub)layer nodes with their containment edges
-   * @param applicationName
-   * @param moduleName
-   * @param includeModuleLayerLayer
+   * @param applicationName Name of the application
+   * @param moduleName Name of the module
+   * @param includeModuleLayerLayer Whether the "Layer" layer of the OutSystems
+   * Architecture Canvas should be included in the resulting graph
    * @param domainNode Optional domain node belonging to this application/module
    * @private
    * @returns Module node

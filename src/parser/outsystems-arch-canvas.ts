@@ -24,6 +24,15 @@ export interface ApplicationGroupEntry {
   ModuleName: string;
 }
 
+export interface IntegrationServiceAPIEntry {
+  ApplicationName: string,
+  ModuleName: string,
+  EndpointAndMethod: string,
+  direction: 'REST (Consume)' | 'REST (Expose)' | string,
+  logtype: 'Integration' | 'ServiceAPI',
+  count: number,
+}
+
 /**
  * Mapping from reference kind to edge labels
  * @param kind

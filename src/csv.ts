@@ -22,7 +22,7 @@ export function writeNodesToDisk(nodes: Node[], fileName = 'nodes.csv', header =
 }
 
 export function writeEdgesToDisk(edges: Edge[], fileName = 'relationships.csv', header = true) {
-  const headers: ('id' | ':TYPE' | ':START_ID' | ':END_ID' | keyof EdgeProperties)[] = ['id', ':TYPE', ':START_ID', ':END_ID', 'referenceType', 'dependencyType', 'weight'];
+  const headers: ('id' | ':TYPE' | ':START_ID' | ':END_ID' | keyof EdgeProperties)[] = ['id', ':TYPE', ':START_ID', ':END_ID', 'referenceType', 'dependencyType', 'nrDependencies', 'nrCalls'];
   const rows = edges
     .map((n) => [
       n.data.id,
@@ -31,7 +31,8 @@ export function writeEdgesToDisk(edges: Edge[], fileName = 'relationships.csv', 
       n.data.target,
       n.data.properties.referenceType,
       n.data.properties.dependencyType,
-      n.data.properties.weight,
+      n.data.properties.nrDependencies,
+      n.data.properties.nrCalls,
     ].map((x) => x?.toString() ?? '').join(','));
   if (header) {
     fs.writeFileSync(fileName, [headers, ...rows].join('\r\n'));
