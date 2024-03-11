@@ -2,7 +2,7 @@
   "name": "vopak-static-arch-transformer",
   "version": "1.0.0",
   "description": "",
-  "main": "src/dependency-graph.ts",
+  "main": "src/index.ts",
   "scripts": {
     "transform": "tsx src/index.ts"
   },
