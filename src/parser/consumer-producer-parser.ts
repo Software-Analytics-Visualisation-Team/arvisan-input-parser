@@ -4,10 +4,11 @@ import RootParser from './root-parser';
 
 export default class ConsumerProducerParser extends RootParser {
   constructor(entries: ConsumerProducerEntry[], includeModuleLayerLayer: boolean) {
-    super();
+    super(includeModuleLayerLayer);
+
     entries.forEach((entry) => {
-      const prodModuleNode = this.getApplicationAndModule(entry['Prod Application'], entry['Prod Espace'], includeModuleLayerLayer);
-      const consModuleNode = this.getApplicationAndModule(entry['Cons Application'], entry['Cons Espace'], includeModuleLayerLayer);
+      const prodModuleNode = this.getApplicationAndModule(entry['Prod Application'], entry['Prod Espace']);
+      const consModuleNode = this.getApplicationAndModule(entry['Cons Application'], entry['Cons Espace']);
 
       const dependencyEdgeId = `${consModuleNode.data.id}__${prodModuleNode.data.id}`;
       const dependencyEdge = this.getDependencyEdge(dependencyEdgeId);

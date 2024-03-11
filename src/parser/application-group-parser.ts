@@ -4,7 +4,7 @@ import { GraphLayers } from '../structure';
 
 export default class ApplicationGroupParser extends RootParser {
   constructor(entries: ApplicationGroupEntry[], includeModuleLayerLayer: boolean) {
-    super();
+    super(includeModuleLayerLayer);
 
     entries.forEach((e, i, all) => {
       const foundIndex = all
@@ -24,7 +24,6 @@ export default class ApplicationGroupParser extends RootParser {
       this.getApplicationAndModule(
         e.ApplicationName,
         e.ModuleName,
-        includeModuleLayerLayer,
         domainNode,
       );
     });

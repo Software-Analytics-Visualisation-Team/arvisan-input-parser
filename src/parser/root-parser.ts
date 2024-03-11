@@ -19,6 +19,12 @@ export default class RootParser {
 
   public dependencyEdges: Edge[] = [];
 
+  /**
+   * @param includeModuleLayerLayer Whether a fifth layer between application and sublayer
+   * (namely Layer) should be included in the resulting graph
+   */
+  constructor(protected includeModuleLayerLayer: boolean) {}
+
   public getNode(id: string) {
     return this.nodes.find((n) => n.data.id === id);
   }
@@ -175,19 +181,16 @@ export default class RootParser {
   /**
    * Create a set of layer and sublayer nodes for each application node
    * @param applicationNodes
-   * @param includeModuleLayerLayer Whether a fifth layer between application and sublayer
-   * (namely Layer) should be included in the resulting graph
    */
   protected getApplicationModuleLayerNodesAndEdges(
     applicationNodes: Node[],
-    includeModuleLayerLayer = false,
   ) {
     const nodes: Node[] = [];
     const edges: Edge[] = [];
     applicationNodes.forEach((applicationNode) => {
       Object.values(ModuleLayers).forEach((layer) => {
         let layerNode: Node | undefined;
-        if (includeModuleLayerLayer) {
+        if (this.includeModuleLayerLayer) {
           layerNode = {
             data: {
               id: this.getApplicationWithLayerId(applicationNode.data.id, layer),
@@ -325,8 +328,6 @@ export default class RootParser {
    * module nodes, and (sub)layer nodes with their containment edges
    * @param applicationName Name of the application
    * @param moduleName Name of the module
-   * @param includeModuleLayerLayer Whether the "Layer" layer of the OutSystems
-   * Architecture Canvas should be included in the resulting graph
    * @param domainNode Optional domain node belonging to this application/module
    * @private
    * @returns Module node
@@ -334,7 +335,6 @@ export default class RootParser {
   protected getApplicationAndModule(
     applicationName: string,
     moduleName: string,
-    includeModuleLayerLayer: boolean,
     domainNode?: Node,
   ): Node {
     const appId = this.getApplicationId(applicationName);
@@ -349,7 +349,7 @@ export default class RootParser {
 
       const {
         nodes: layerNodes, edges: layerEdges,
-      } = this.getApplicationModuleLayerNodesAndEdges([appNode], includeModuleLayerLayer);
+      } = this.getApplicationModuleLayerNodesAndEdges([appNode]);
       this.nodes.push(appNode, ...layerNodes);
       this.containEdges.push(...layerEdges);
     }

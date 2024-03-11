@@ -8,7 +8,7 @@ export default class IntegrationParser extends RootParser {
    * @param includeModuleLayerLayer
    */
   constructor(entries: IntegrationServiceAPIEntry[], includeModuleLayerLayer: boolean) {
-    super();
+    super(includeModuleLayerLayer);
 
     const integrations = entries.filter((e) => e.logtype === 'Integration');
 
@@ -29,7 +29,7 @@ export default class IntegrationParser extends RootParser {
     });
 
     validGroupedIntegrations
-      .forEach((group) => this.parseGroupedIntegration(group, includeModuleLayerLayer));
+      .forEach((group) => this.parseGroupedIntegration(group));
 
     this.trim();
 
@@ -40,12 +40,10 @@ export default class IntegrationParser extends RootParser {
   /**
    * Parse a set of integrations that likely belong together as a set of dependencies
    * @param group
-   * @param includeModuleLayerLayer
    * @private
    */
   private parseGroupedIntegration(
     group: IntegrationServiceAPIEntry[],
-    includeModuleLayerLayer: boolean,
   ) {
     const producer = group.find((e) => e.direction === 'REST (Expose)');
     if (producer === undefined) throw new Error('Producer not found');
@@ -54,14 +52,12 @@ export default class IntegrationParser extends RootParser {
     const prodModuleNode = this.getApplicationAndModule(
       producer.ApplicationName,
       producer.ModuleName,
-      includeModuleLayerLayer,
     );
 
     consumers.forEach((consumer) => {
       const consModuleNode = this.getApplicationAndModule(
         consumer.ApplicationName,
         consumer.ModuleName,
-        includeModuleLayerLayer,
       );
 
       const dependencyEdgeId = `${consModuleNode.data.id}__${prodModuleNode.data.id}`;
