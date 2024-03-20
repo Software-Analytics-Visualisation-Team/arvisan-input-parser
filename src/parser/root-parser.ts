@@ -7,9 +7,11 @@ import {
   FoundationLayerSublayers,
   GraphLayers,
   moduleColors,
+  ModuleDependencyProfileCategory,
   ModuleLayers,
   ModuleSublayer,
   Node,
+  RelationshipLabel,
 } from '../structure';
 
 export default class RootParser {
@@ -121,6 +123,7 @@ export default class RootParser {
           simpleName: domainName,
           color: '#7B7D7D',
           depth: 0,
+          dependencyProfileCategory: ModuleDependencyProfileCategory.NONE,
         },
         labels: [GraphLayers.DOMAIN],
       },
@@ -146,6 +149,7 @@ export default class RootParser {
           simpleName: applicationName,
           color: '#7B7D7D',
           depth: 1,
+          dependencyProfileCategory: ModuleDependencyProfileCategory.NONE,
         },
         labels: [GraphLayers.APPLICATION],
       },
@@ -172,6 +176,7 @@ export default class RootParser {
           simpleName: moduleName,
           color: '#7B7D7D',
           depth: 4,
+          dependencyProfileCategory: ModuleDependencyProfileCategory.HIDDEN,
         },
         labels: [GraphLayers.MODULE],
       },
@@ -199,6 +204,7 @@ export default class RootParser {
                 simpleName: layer,
                 color: moduleColors[layer],
                 depth: 3,
+                dependencyProfileCategory: ModuleDependencyProfileCategory.NONE,
               },
               labels: [`layer_${layer}`, GraphLayers.LAYER],
             },
@@ -212,7 +218,7 @@ export default class RootParser {
                 referenceType: 'Contains',
                 referenceNames: ['Contains'],
               },
-              label: 'contains',
+              label: RelationshipLabel.CONTAINS,
             },
           };
           nodes.push(layerNode);
@@ -240,6 +246,7 @@ export default class RootParser {
                 simpleName: subLayer,
                 color: moduleColors[layer],
                 depth: 3,
+                dependencyProfileCategory: ModuleDependencyProfileCategory.NONE,
               },
               labels: [`Sublayer_${subLayer}`, GraphLayers.SUB_LAYER],
             },
@@ -254,7 +261,7 @@ export default class RootParser {
                 referenceType: 'Contains',
                 referenceNames: ['Contains'],
               },
-              label: 'contains',
+              label: RelationshipLabel.CONTAINS,
             },
           });
 
@@ -282,7 +289,7 @@ export default class RootParser {
         id: `${source.data.id}__${target.data.id}`,
         source: source.data.id,
         target: target.data.id,
-        label: 'contains',
+        label: RelationshipLabel.CONTAINS,
         properties: {
           referenceType: 'Contains',
           referenceNames: ['Contains'],

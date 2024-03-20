@@ -39,19 +39,34 @@ export const moduleColors = {
 
 export type ModuleSublayer = EndUserLayerSublayers | CoreLayerSublayers | FoundationLayerSublayers;
 
+export enum ModuleDependencyProfileCategory {
+  HIDDEN = 'hidden',
+  INBOUND = 'inbound',
+  OUTBOUND = 'outbound',
+  TRANSIT = 'transit',
+  NONE = '',
+}
+
 export type NodeProperties = {
   fullName: string;
   simpleName: string;
   color: string;
   depth: number;
+  dependencyProfileCategory: ModuleDependencyProfileCategory;
 };
 
 export interface Node {
   data: {
     id: string;
     properties: NodeProperties,
-    labels: string[];
+    labels: (string | GraphLayers)[];
   }
+}
+
+export enum RelationshipLabel {
+  CONTAINS = 'contains',
+  CALLS = 'calls',
+  VIOLATES = 'violates',
 }
 
 export enum DependencyType {
@@ -73,7 +88,7 @@ export interface Edge {
     id: string;
     source: string;
     target: string;
-    label: string;
+    label: RelationshipLabel;
     properties: EdgeProperties
   }
 }

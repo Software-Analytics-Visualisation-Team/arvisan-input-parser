@@ -1,4 +1,4 @@
-import { DependencyType, GraphLayers } from '../structure';
+import { DependencyType, GraphLayers, RelationshipLabel } from '../structure';
 import {
   ConsumerProducerEntry,
   consumerTypeToDependencyType,
@@ -49,7 +49,7 @@ export default class ConsumerProducerParser extends RootParser {
             id: dependencyEdgeId,
             source: consModuleNode.data.id,
             target: prodModuleNode.data.id,
-            label: 'calls',
+            label: RelationshipLabel.CALLS,
             properties: {
               referenceType: entry['Reference Kind'],
               referenceNames: [entry['Reference Name']],

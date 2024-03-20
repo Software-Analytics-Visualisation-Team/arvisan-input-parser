@@ -1,11 +1,14 @@
 import {
-  CoreLayerSublayers, Edge,
+  CoreLayerSublayers,
+  Edge,
   EndUserLayerSublayers,
   FoundationLayerSublayers,
   Graph,
   moduleColors,
+  ModuleDependencyProfileCategory,
   ModuleLayers,
   Node,
+  RelationshipLabel,
 } from './structure';
 
 function getName(sublayer: string) {
@@ -22,6 +25,7 @@ function createSublayerNodes(layer: ModuleLayers, sublayers: string[]): Node[] {
         simpleName: getName(sublayer),
         color: moduleColors[layer],
         depth: -1,
+        dependencyProfileCategory: ModuleDependencyProfileCategory.NONE,
       },
     },
   }));
@@ -31,7 +35,7 @@ function createLayerViolationEdges(sublayersFrom: string[], sublayersTo: string[
   return sublayersFrom.map((from) => sublayersTo.map((to): Edge => ({
     data: {
       id: `${getName(from)}-${getName(to)}`,
-      label: 'violates',
+      label: RelationshipLabel.VIOLATES,
       source: getName(from),
       target: getName(to),
       properties: {

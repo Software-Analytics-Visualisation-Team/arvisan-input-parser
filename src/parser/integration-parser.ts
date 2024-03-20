@@ -1,6 +1,6 @@
 import RootParser from './root-parser';
 import { IntegrationServiceAPIEntry } from './outsystems-arch-canvas';
-import { DependencyType, GraphLayers } from '../structure';
+import { DependencyType, GraphLayers, RelationshipLabel } from '../structure';
 
 export default class IntegrationParser extends RootParser {
   /**
@@ -79,7 +79,7 @@ export default class IntegrationParser extends RootParser {
             id: dependencyEdgeId,
             source: consModuleNode.data.id,
             target: prodModuleNode.data.id,
-            label: 'calls',
+            label: RelationshipLabel.CALLS,
             properties: {
               referenceType: 'Integration',
               referenceNames: [consumer.EndpointAndMethod],

@@ -1,13 +1,13 @@
 import { readFile, utils } from 'xlsx';
 import {
-  Edge,
-  Graph, GraphLayers, Node,
+  Edge, Graph, GraphLayers, ModuleDependencyProfileCategory, Node, RelationshipLabel,
 } from '../structure';
 import logger from '../logger';
 import { ApplicationGroupEntry, ConsumerProducerEntry, IntegrationServiceAPIEntry } from './outsystems-arch-canvas';
 import ConsumerProducerParser from './consumer-producer-parser';
 import ApplicationGroupParser from './application-group-parser';
 import IntegrationParser from './integration-parser';
+import DependencyProfiles from './dependency-profiles';
 
 function removeDuplicates<T extends Node | Edge>(elements: T[]) {
   return elements.filter((n, index, all) => index === all
@@ -91,6 +91,11 @@ export default function getGraph(
     .filter((applicationNode) => !edges.find((e) => e.data.target === applicationNode.data.id))
     .map((applicationNode) => agParser.createContainEdge(defaultDomainNode, applicationNode));
   logger.info('Added domain parents!');
+
+  logger.info('Find module dependency type...');
+  const moduleNodes = nodes.filter((n) => n.data.labels.includes(GraphLayers.MODULE));
+  DependencyProfiles.find(moduleNodes, nodes, edges);
+  logger.info('Module dependency types found!');
 
   return {
     elements: { nodes: [defaultDomainNode, ...nodes], edges: [...edges, ...noDomainContainEdges] },

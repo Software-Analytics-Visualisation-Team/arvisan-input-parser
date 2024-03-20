@@ -4,7 +4,7 @@ import {
 } from './structure';
 
 export function writeNodesToDisk(nodes: Node[], fileName = 'nodes.csv', header = true) {
-  const headers: ('id:ID' | ':LABEL' | keyof NodeProperties)[] = ['id:ID', ':LABEL', 'fullName', 'simpleName', 'color', 'depth:INT' as 'depth'];
+  const headers: ('id:ID' | ':LABEL' | keyof NodeProperties)[] = ['id:ID', ':LABEL', 'fullName', 'simpleName', 'color', 'depth:INT' as 'depth', 'dependencyProfileCategory'];
   const rows = nodes
     .map((n) => [
       n.data.id,
@@ -13,7 +13,8 @@ export function writeNodesToDisk(nodes: Node[], fileName = 'nodes.csv', header =
       n.data.properties.simpleName,
       n.data.properties.color,
       n.data.properties.depth,
-    ].map((x) => x.toString()).join(','));
+      n.data.properties.dependencyProfileCategory,
+    ].join(','));
   if (header) {
     fs.writeFileSync(fileName, [headers, ...rows].join('\r\n'));
   } else {
