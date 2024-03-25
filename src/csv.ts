@@ -7,7 +7,7 @@ export function writeNodesToDisk(nodes: Node[], fileName = 'nodes.csv', header =
   const headers: ('id:ID' | ':LABEL' | keyof NodeProperties)[] = [
     'id:ID', ':LABEL', 'fullName', 'simpleName', 'color', 'depth:INT' as 'depth', 'dependencyProfileCategory', 'cohesion',
     // Optional properties
-    'fileSizeKb:INT' as 'fileSizeKb', 'nrScreens:INT' as 'nrScreens', 'nrEntities:INT' as 'nrEntities',
+    'fileSizeKB:INT' as 'fileSizeKB', 'nrScreens:INT' as 'nrScreens', 'nrEntities:INT' as 'nrEntities',
     'nrPublicElements:INT' as 'nrPublicElements', 'nrRESTConsumers:INT' as 'nrRESTConsumers', 'nrRESTProducers:INT' as 'nrRESTProducers',
   ];
   const rows = nodes
@@ -21,7 +21,7 @@ export function writeNodesToDisk(nodes: Node[], fileName = 'nodes.csv', header =
       n.data.properties.dependencyProfileCategory,
       n.data.properties.cohesion,
       // Optional properties
-      n.data.properties.fileSizeKb,
+      n.data.properties.fileSizeKB,
       n.data.properties.nrScreens,
       n.data.properties.nrEntities,
       n.data.properties.nrPublicElements,

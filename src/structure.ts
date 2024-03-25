@@ -49,7 +49,7 @@ export enum ModuleDependencyProfileCategory {
 
 export type NodePropertiesDetails = {
   // Module details
-  fileSizeKb?: number;
+  fileSizeKB?: number;
   nrScreens?: number;
   nrEntities?: number;
   nrPublicElements?: number;
@@ -70,7 +70,7 @@ export type NodeProperties = NodePropertiesDetails & {
 };
 
 export const optionalModuleProperties: (keyof NodePropertiesDetails)[] = [
-  'fileSizeKb', 'nrScreens', 'nrEntities', 'nrPublicElements', 'nrRESTConsumers', 'nrRESTProducers',
+  'fileSizeKB', 'nrScreens', 'nrEntities', 'nrPublicElements', 'nrRESTConsumers', 'nrRESTProducers',
 ];
 
 export interface Node {

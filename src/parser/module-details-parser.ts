@@ -1,7 +1,7 @@
 import RootParser from './root-parser';
 import { ModuleDetailsEntry } from './outsystems-arch-canvas';
 import {
-  Edge, GraphLayers, Node, NodeProperties, NodePropertiesDetails, optionalModuleProperties, RelationshipLabel,
+  Edge, GraphLayers, Node, NodePropertiesDetails, optionalModuleProperties, RelationshipLabel,
 } from '../structure';
 
 export default class ModuleDetailsParser extends RootParser {
@@ -56,7 +56,7 @@ export default class ModuleDetailsParser extends RootParser {
     entries.forEach((e) => {
       const moduleNode = this.getApplicationAndModule(e['Application Name'], e['Module Name']);
 
-      moduleNode.data.properties.fileSizeKb = e['File Size KB'];
+      moduleNode.data.properties.fileSizeKB = e['File Size KB'];
       moduleNode.data.properties.nrScreens = e['Count Screens'];
       moduleNode.data.properties.nrEntities = e['Count Entities'];
       moduleNode.data.properties.nrPublicElements = e['Count Public Elements'];

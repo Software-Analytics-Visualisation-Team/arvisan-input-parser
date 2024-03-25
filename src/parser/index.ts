@@ -109,10 +109,12 @@ export default function getGraph(
 
   logger.info('Add domain to applications that have none...');
   const defaultDomainNode: Node = agParser.createDomainNode('no_domain');
-  const applicationNodes = mergedNodes.filter((n) => n.data.labels.includes(GraphLayers.APPLICATION));
+  const applicationNodes = mergedNodes
+    .filter((n) => n.data.labels.includes(GraphLayers.APPLICATION));
   const noDomainContainEdges = applicationNodes
     // Application only has incoming/outgoing dependency edges
-    .filter((applicationNode) => !mergedEdges.find((e) => e.data.target === applicationNode.data.id))
+    .filter((applicationNode) => !mergedEdges
+      .find((e) => e.data.target === applicationNode.data.id))
     .map((applicationNode) => agParser.createContainEdge(defaultDomainNode, applicationNode));
   logger.info('Added domain parents!');
 
