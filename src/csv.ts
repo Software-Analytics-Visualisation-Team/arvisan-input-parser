@@ -4,7 +4,12 @@ import {
 } from './structure';
 
 export function writeNodesToDisk(nodes: Node[], fileName = 'nodes.csv', header = true) {
-  const headers: ('id:ID' | ':LABEL' | keyof NodeProperties)[] = ['id:ID', ':LABEL', 'fullName', 'simpleName', 'color', 'depth:INT' as 'depth', 'dependencyProfileCategory', 'cohesion'];
+  const headers: ('id:ID' | ':LABEL' | keyof NodeProperties)[] = [
+    'id:ID', ':LABEL', 'fullName', 'simpleName', 'color', 'depth:INT' as 'depth', 'dependencyProfileCategory', 'cohesion',
+    // Optional properties
+    'fileSizeKb:INT' as 'fileSizeKb', 'nrScreens:INT' as 'nrScreens', 'nrEntities:INT' as 'nrEntities',
+    'nrPublicElements:INT' as 'nrPublicElements', 'nrRESTConsumers:INT' as 'nrRESTConsumers', 'nrRESTProducers:INT' as 'nrRESTProducers',
+  ];
   const rows = nodes
     .map((n) => [
       n.data.id,
@@ -15,6 +20,13 @@ export function writeNodesToDisk(nodes: Node[], fileName = 'nodes.csv', header =
       n.data.properties.depth,
       n.data.properties.dependencyProfileCategory,
       n.data.properties.cohesion,
+      // Optional properties
+      n.data.properties.fileSizeKb,
+      n.data.properties.nrScreens,
+      n.data.properties.nrEntities,
+      n.data.properties.nrPublicElements,
+      n.data.properties.nrRESTConsumers,
+      n.data.properties.nrRESTProducers,
     ])
     .map((row) => {
       if (row.length !== headers.length) {

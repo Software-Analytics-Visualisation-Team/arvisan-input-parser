@@ -1,5 +1,5 @@
 import {
-  Edge, Graph, GraphLayers, Node,
+  Edge, Graph, GraphLayers, Node, optionalModuleProperties,
 } from './structure';
 
 /**
@@ -25,8 +25,10 @@ export function edgeExists(edges: Edge[], source: string, target: string) {
  * Validate that the graph adheres to the ClassViz spec
  * https://rsatrioadi.github.io/classviz/
  * @param graph
+ * @param propagatedProperties Whether or not all the nodes should
+ * contain propagated module properties
  */
-export function validateGraph(graph: Graph) {
+export function validateGraph(graph: Graph, propagatedProperties = false) {
   graph.elements.nodes.forEach((n, i, all) => {
     // Every node should have a unique ID
     if (all.filter((n2) => n2.data.id === n.data.id).length > 1) {
@@ -57,6 +59,19 @@ export function validateGraph(graph: Graph) {
         throw new Error(`Module node ${n.data.id} does not have a single "Module" label (has ${n.data.labels.toString()} instead).`);
       }
     });
+
+  // Check if all module properties are propagated correctly to higher layers, but only
+  // if that should have happened (i.e. we have actually set such properties on the module
+  // layer)
+  if (propagatedProperties) {
+    graph.elements.nodes.forEach((n) => {
+      optionalModuleProperties.forEach((property) => {
+        if (n.data.properties[property] === undefined) {
+          throw new Error(`Node property "${property}" is undefined for node "${n.data.id}", but that should not be the case.`);
+        }
+      });
+    });
+  }
 
   graph.elements.edges.forEach((e, i, all) => {
     // Every edge should have a unique ID

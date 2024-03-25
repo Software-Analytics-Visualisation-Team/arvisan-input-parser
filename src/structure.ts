@@ -47,14 +47,31 @@ export enum ModuleDependencyProfileCategory {
   NONE = '',
 }
 
-export type NodeProperties = {
+export type NodePropertiesDetails = {
+  // Module details
+  fileSizeKb?: number;
+  nrScreens?: number;
+  nrEntities?: number;
+  nrPublicElements?: number;
+  nrRESTConsumers?: number;
+  nrRESTProducers?: number;
+};
+
+export type NodeProperties = NodePropertiesDetails & {
+  // General properties
   fullName: string;
   simpleName: string;
   color: string;
   depth: number;
+
+  // Metrics
   dependencyProfileCategory: ModuleDependencyProfileCategory;
   cohesion: number;
 };
+
+export const optionalModuleProperties: (keyof NodePropertiesDetails)[] = [
+  'fileSizeKb', 'nrScreens', 'nrEntities', 'nrPublicElements', 'nrRESTConsumers', 'nrRESTProducers',
+];
 
 export interface Node {
   data: {

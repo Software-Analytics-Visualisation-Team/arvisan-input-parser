@@ -33,6 +33,18 @@ export interface IntegrationServiceAPIEntry {
   count: number,
 }
 
+export interface ModuleDetailsEntry {
+  'Application Name': string;
+  'Module Name': string;
+  'File Size KB': number;
+  'Count Screens': number;
+  'Count Entities': number;
+  'Count Public Elements': number;
+  'Count REST Consumer': number;
+  'Count REST Producer': number;
+  'Count BPT Process Def': number;
+}
+
 /**
  * Mapping from reference kind to edge labels
  * @param kind

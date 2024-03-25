@@ -24,7 +24,8 @@ program
   .option('-l, --layer', 'include "layer" nodes in the resulting graph')
   .requiredOption('-g, --grouping <file>', 'location of domain (application group) dataset')
   .requiredOption('-d, --dependencies <files>', 'one or more locations of dependency dataset(s)', groupInputFiles, [])
-  .option('-i, --integrations <file>', 'location of integration/service API dataset');
+  .option('-i, --integrations <file>', 'location of integration/service API dataset')
+  .option('-m, --moduleDetails <files>', 'one or more locations of module details dataset(s)', groupInputFiles, []);
 
 program.parse();
 
@@ -34,13 +35,17 @@ const graph = getGraph(
   options.grouping,
   options.dependencies,
   options.integrations,
+  options.moduleDetails,
   !!options.layer,
 );
 const violations = getViolationsAsGraph();
 logger.info(`Generated LPG with ${graph.elements.nodes.length} nodes and ${graph.elements.edges.length} edges.`);
 
 logger.info('Validating graph...');
-validateGraph(graph);
+// If we have at least one module details file, all nodes should have aggregates
+// of these numerical properties.
+const propagatedProperties = options.moduleDetails.length > 0;
+validateGraph(graph, propagatedProperties);
 logger.info('Graph successfully validated');
 
 if (options.json) {

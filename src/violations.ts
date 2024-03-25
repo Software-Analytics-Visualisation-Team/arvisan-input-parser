@@ -26,6 +26,7 @@ function createSublayerNodes(layer: ModuleLayers, sublayers: string[]): Node[] {
         color: moduleColors[layer],
         depth: -1,
         dependencyProfileCategory: ModuleDependencyProfileCategory.NONE,
+        cohesion: -1,
       },
     },
   }));
