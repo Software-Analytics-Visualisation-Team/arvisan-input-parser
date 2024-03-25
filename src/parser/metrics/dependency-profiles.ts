@@ -1,9 +1,16 @@
 import {
   Edge, GraphLayers, ModuleDependencyProfileCategory, Node, RelationshipLabel,
-} from '../structure';
+} from '../../structure';
 
 const CONTAINMENT_LEVEL: GraphLayers = GraphLayers.APPLICATION;
 
+/**
+ * Dependency profiles as based on:
+ *
+ * Bouwers, Eric, Arie van Deursen, and Joost Visser. "Dependency profiles for software
+ * architecture evaluations." 2011 27th IEEE International Conference on Software
+ * Maintenance (ICSM). IEEE, 2011.
+ */
 export default class DependencyProfiles {
   /**
    * Given a node, get a list of all this node's parent nodes (including itself).

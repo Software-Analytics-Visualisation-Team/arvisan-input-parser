@@ -53,6 +53,7 @@ export type NodeProperties = {
   color: string;
   depth: number;
   dependencyProfileCategory: ModuleDependencyProfileCategory;
+  cohesion: number;
 };
 
 export interface Node {

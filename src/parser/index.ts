@@ -1,13 +1,14 @@
 import { readFile, utils } from 'xlsx';
 import {
-  Edge, Graph, GraphLayers, ModuleDependencyProfileCategory, Node, RelationshipLabel,
+  Edge, Graph, GraphLayers, Node,
 } from '../structure';
 import logger from '../logger';
 import { ApplicationGroupEntry, ConsumerProducerEntry, IntegrationServiceAPIEntry } from './outsystems-arch-canvas';
 import ConsumerProducerParser from './consumer-producer-parser';
 import ApplicationGroupParser from './application-group-parser';
 import IntegrationParser from './integration-parser';
-import DependencyProfiles from './dependency-profiles';
+import DependencyProfiles from './metrics/dependency-profiles';
+import Cohesion from './metrics/cohesion';
 
 function removeDuplicates<T extends Node | Edge>(elements: T[]) {
   return elements.filter((n, index, all) => index === all
@@ -92,10 +93,13 @@ export default function getGraph(
     .map((applicationNode) => agParser.createContainEdge(defaultDomainNode, applicationNode));
   logger.info('Added domain parents!');
 
-  logger.info('Find module dependency type...');
+  logger.info('Calculate metrics...');
+  logger.info('   -> Dependency types...');
   const moduleNodes = nodes.filter((n) => n.data.labels.includes(GraphLayers.MODULE));
   DependencyProfiles.find(moduleNodes, nodes, edges);
-  logger.info('Module dependency types found!');
+  logger.info('   -> Cohesion....');
+  Cohesion.find(nodes, edges);
+  logger.info('Finished calculating metrics!');
 
   return {
     elements: { nodes: [defaultDomainNode, ...nodes], edges: [...edges, ...noDomainContainEdges] },
