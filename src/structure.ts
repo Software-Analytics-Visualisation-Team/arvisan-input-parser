@@ -66,7 +66,7 @@ export type NodeProperties = NodePropertiesDetails & {
 
   // Metrics
   dependencyProfileCategory: ModuleDependencyProfileCategory;
-  cohesion: number;
+  cohesion?: number;
 };
 
 export const optionalModuleProperties: (keyof NodePropertiesDetails)[] = [

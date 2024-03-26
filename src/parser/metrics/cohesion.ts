@@ -1,4 +1,6 @@
-import { Edge, Node, RelationshipLabel } from '../../structure';
+import {
+  Edge, GraphLayers, Node, RelationshipLabel,
+} from '../../structure';
 
 export default class Cohesion {
   private static getLeafChildren(node: Node, allNodes: Node[], allEdges: Edge[]): Node[] {
@@ -15,6 +17,7 @@ export default class Cohesion {
 
   static find(nodes: Node[], edges: Edge[]) {
     nodes.forEach((n) => {
+      if (n.data.labels.includes(GraphLayers.MODULE)) return;
       const children = this.getLeafChildren(n, nodes, edges);
       const childIds = children.map((c) => c.data.id);
 

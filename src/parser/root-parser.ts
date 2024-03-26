@@ -179,7 +179,6 @@ export default class RootParser {
           color: '#7B7D7D',
           depth: 4,
           dependencyProfileCategory: ModuleDependencyProfileCategory.HIDDEN,
-          cohesion: 0,
         },
         labels: [GraphLayers.MODULE],
       },
