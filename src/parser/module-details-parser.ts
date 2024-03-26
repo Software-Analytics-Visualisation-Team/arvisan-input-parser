@@ -1,5 +1,5 @@
 import RootParser from './root-parser';
-import { ModuleDetailsEntry } from './outsystems-arch-canvas';
+import { ModuleDetailsEntry } from '../input-spec';
 import {
   Edge, GraphLayers, Node, NodePropertiesDetails, optionalModuleProperties, RelationshipLabel,
 } from '../structure';

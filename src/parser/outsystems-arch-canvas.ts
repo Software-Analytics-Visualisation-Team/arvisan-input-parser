@@ -7,44 +7,6 @@ import {
   ModuleSublayer,
 } from '../structure';
 
-export interface ConsumerProducerEntry {
-  'Cons Application': string // Consumer application
-  'Cons Espace': string // Consumer module
-  'Prod Application': string // Consumer application
-  'Prod Espace': string // Consumer module
-  'Reference Kind': string
-  'Reference Name': string
-  'Reference SS Key': string
-}
-
-export interface ApplicationGroupEntry {
-  ApplicationGroupName: string;
-  ApplicationName: string;
-  ModuleKind: string;
-  ModuleName: string;
-}
-
-export interface IntegrationServiceAPIEntry {
-  ApplicationName: string,
-  ModuleName: string,
-  EndpointAndMethod: string,
-  direction: 'REST (Consume)' | 'REST (Expose)' | string,
-  logtype: 'Integration' | 'ServiceAPI',
-  count: number,
-}
-
-export interface ModuleDetailsEntry {
-  'Application Name': string;
-  'Module Name': string;
-  'File Size KB': number;
-  'Count Screens': number;
-  'Count Entities': number;
-  'Count Public Elements': number;
-  'Count REST Consumer': number;
-  'Count REST Producer': number;
-  'Count BPT Process Def': number;
-}
-
 /**
  * Mapping from reference kind to edge labels
  * @param kind

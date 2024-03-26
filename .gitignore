@@ -1,5 +1,16 @@
 node_modules
-*.xlsx
-graph.json
+data
+
+# No IDE settings, as those might leak filenames
 .idea
+.vscode
+
+# No data should be stored in this repository
+*.json
+# From https://docs.sheetjs.com/docs/miscellany/formats/
 *.csv
+*.txt
+*.dif
+*.xls
+*.xlsx
+*.ods

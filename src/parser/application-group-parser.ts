@@ -1,5 +1,5 @@
 import RootParser from './root-parser';
-import { ApplicationGroupEntry } from './outsystems-arch-canvas';
+import { ApplicationGroupEntry } from '../input-spec';
 import { GraphLayers } from '../structure';
 
 export default class ApplicationGroupParser extends RootParser {

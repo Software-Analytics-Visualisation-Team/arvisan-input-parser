@@ -1,5 +1,5 @@
 import RootParser from './root-parser';
-import { IntegrationServiceAPIEntry } from './outsystems-arch-canvas';
+import { IntegrationServiceAPIEntry } from '../input-spec';
 import { DependencyType, GraphLayers, RelationshipLabel } from '../structure';
 
 export default class IntegrationParser extends RootParser {

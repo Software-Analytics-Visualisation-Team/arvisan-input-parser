@@ -8,7 +8,7 @@ import {
   ConsumerProducerEntry,
   IntegrationServiceAPIEntry,
   ModuleDetailsEntry,
-} from './outsystems-arch-canvas';
+} from '../input-spec';
 import ConsumerProducerParser from './consumer-producer-parser';
 import ApplicationGroupParser from './application-group-parser';
 import IntegrationParser from './integration-parser';

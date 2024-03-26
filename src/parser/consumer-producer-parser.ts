@@ -1,9 +1,6 @@
 import { DependencyType, GraphLayers, RelationshipLabel } from '../structure';
-import {
-  ConsumerProducerEntry,
-  consumerTypeToDependencyType,
-  IntegrationServiceAPIEntry,
-} from './outsystems-arch-canvas';
+import { ConsumerProducerEntry, IntegrationServiceAPIEntry } from '../input-spec';
+import { consumerTypeToDependencyType } from './outsystems-arch-canvas';
 import RootParser from './root-parser';
 
 export default class ConsumerProducerParser extends RootParser {
