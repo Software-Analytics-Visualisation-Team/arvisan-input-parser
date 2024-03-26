@@ -13,6 +13,8 @@ function groupInputFiles(newFile: string, allFiles: string[]) {
   return allFiles;
 }
 
+const startTime = new Date();
+
 program
   .name('npm run transform')
   .description('Small tool to parse OutSystems architecture/dependency datasets into ')
@@ -46,7 +48,7 @@ logger.info('Validating graph...');
 // of these numerical properties.
 const propagatedProperties = options.moduleDetails.length > 0;
 validateGraph(graph, propagatedProperties);
-logger.info('Graph successfully validated');
+logger.info('    Done!');
 
 if (options.json) {
   fs.writeFileSync('graph.json', JSON.stringify(graph, null, 4));
@@ -66,14 +68,19 @@ if (options.csv || options.seedLocal) {
 if (options.seedLocal) {
   logger.info('Start seeding to Neo4j database...');
   importGraphIntoNeo4j(options.seedLocal);
-  logger.info('Seeded to Neo4j database!');
+  logger.info('    Done!');
+}
+
+function finish() {
+  const finishTime = new Date().getTime() - startTime.getTime();
+  logger.info(`Tasks finished in ${Math.round(finishTime / 1000)}s. Exit.`);
 }
 
 if (options.seedRemotePassword) {
   injectGraph(graph, options.seedRemotePassword, options.seedRemoteUrl).then(() => {
-    logger.info('Tasks finished. Exit.');
+    finish();
     process.exit(0);
   });
 } else {
-  logger.info('Tasks finished. Exit.');
+  finish();
 }

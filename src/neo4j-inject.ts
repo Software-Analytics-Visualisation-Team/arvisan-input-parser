@@ -25,7 +25,7 @@ function createEdgeQuery(e: Edge, nodes: Node[]): string {
 
 function createQuery(g: Graph): string {
   const query = `CREATE ${g.elements.nodes.map((n) => createNodeQuery(n)).join(', ')}, ${g.elements.edges.map((e) => createEdgeQuery(e, g.elements.nodes))}`;
-  logger.info('Built query...');
+  logger.info('  Built query...');
   return query;
 }
 
@@ -46,10 +46,10 @@ export default async function injectGraph(graph: Graph, password: string, url = 
 
   try {
     await session.run(createQuery(graph));
-    logger.info('Seeded entries');
+    logger.info('  Seeded entries');
     await session.run(createQuery(getViolationsAsGraph()));
-    logger.info('Seeded violations');
-    logger.info('Seeded database');
+    logger.info('  Seeded violations');
+    logger.info('  Seeded database');
   } catch (e) {
     console.error(`Could not inject graph: ${e}`);
   } finally {

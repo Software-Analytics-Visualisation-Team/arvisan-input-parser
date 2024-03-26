@@ -119,7 +119,7 @@ export default class RootParser {
       data: {
         id,
         properties: {
-          fullName: id,
+          fullName: domainName,
           simpleName: domainName,
           color: '#7B7D7D',
           depth: 0,
@@ -146,7 +146,7 @@ export default class RootParser {
       data: {
         id,
         properties: {
-          fullName: id,
+          fullName: applicationName,
           simpleName: applicationName,
           color: '#7B7D7D',
           depth: 1,
@@ -174,7 +174,7 @@ export default class RootParser {
       data: {
         id,
         properties: {
-          fullName: id,
+          fullName: moduleName,
           simpleName: moduleName,
           color: '#7B7D7D',
           depth: 4,
@@ -202,7 +202,7 @@ export default class RootParser {
             data: {
               id: this.getApplicationWithLayerId(applicationNode.data.id, layer),
               properties: {
-                fullName: `Layer_${layer}`,
+                fullName: `${applicationNode.data.properties.simpleName} ${layer}`,
                 simpleName: layer,
                 color: moduleColors[layer],
                 depth: 3,
@@ -245,7 +245,7 @@ export default class RootParser {
             data: {
               id: this.getApplicationWithSublayerId(applicationNode.data.id, layer, subLayer),
               properties: {
-                fullName: `Sublayer_${subLayer}`,
+                fullName: `${applicationNode.data.properties.simpleName} ${subLayer}`,
                 simpleName: subLayer,
                 color: moduleColors[layer],
                 depth: 3,

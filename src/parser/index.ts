@@ -62,13 +62,13 @@ export default function getGraph(
       .sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]))
     .flat();
 
-  logger.info('Loaded files!');
+  logger.info('    Done!');
 
   let modDetailsParser: ModuleDetailsParser | undefined;
   if (moduleDetailsEntries.length > 0) {
     logger.info('Parsing module details dataset...');
     modDetailsParser = new ModuleDetailsParser(moduleDetailsEntries, includeModuleLayerLayer);
-    logger.info('Parsed module details dataset!');
+    logger.info('    Done!');
   }
 
   logger.info('Parsing consumer/producer datasets...');
@@ -77,17 +77,17 @@ export default function getGraph(
     includeModuleLayerLayer,
     serviceAPIEntries,
   );
-  logger.info('Parsed consumer/producer datasets!');
+  logger.info('    Done!');
 
   logger.info('Parsing application group dataset...');
   const agParser = new ApplicationGroupParser(applicationEntries, includeModuleLayerLayer);
-  logger.info('Parsed application group dataset!');
+  logger.info('    Done!');
 
   let intParser: IntegrationParser | undefined;
   if (integrationEntries) {
     logger.info('Parsing integration dataset...');
     intParser = new IntegrationParser(integrationEntries, includeModuleLayerLayer);
-    logger.info('Parsed integration dataset!');
+    logger.info('    Done!');
   }
 
   logger.info('Merging datasets...');
@@ -105,7 +105,7 @@ export default function getGraph(
     ...intParser ? intParser.containEdges : [],
     ...intParser ? intParser.dependencyEdges : [],
   ]);
-  logger.info('Merged datasets!');
+  logger.info('    Done!');
 
   logger.info('Add domain to applications that have none...');
   const defaultDomainNode: Node = agParser.createDomainNode('no_domain');
@@ -116,7 +116,7 @@ export default function getGraph(
     .filter((applicationNode) => !mergedEdges
       .find((e) => e.data.target === applicationNode.data.id))
     .map((applicationNode) => agParser.createContainEdge(defaultDomainNode, applicationNode));
-  logger.info('Added domain parents!');
+  logger.info('    Done!');
 
   const nodes = [defaultDomainNode, ...mergedNodes];
   const edges = [...mergedEdges, ...noDomainContainEdges];
@@ -124,16 +124,17 @@ export default function getGraph(
   if (modDetailsParser) {
     logger.info('Propagating module properties to parent nodes...');
     modDetailsParser.propagateModuleProperties(nodes, edges);
-    logger.info('Propagated module properties!');
+    logger.info('    Done!');
   }
 
   logger.info('Calculate metrics...');
-  logger.info('   -> Dependency types...');
+  logger.info('  Dependency types...');
   const moduleNodes = nodes.filter((n) => n.data.labels.includes(GraphLayers.MODULE));
   DependencyProfiles.find(moduleNodes, nodes, edges);
-  logger.info('   -> Cohesion....');
+  logger.info('    Done!');
+  logger.info('  Cohesion....');
   Cohesion.find(nodes, edges);
-  logger.info('Finished calculating metrics!');
+  logger.info('    Done!');
 
   return {
     elements: { nodes, edges },
