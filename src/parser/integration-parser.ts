@@ -83,7 +83,7 @@ export default class IntegrationParser extends RootParser {
             properties: {
               referenceType: 'Integration',
               referenceNames: [consumer.EndpointAndMethod],
-              dependencyType: DependencyType.WEAK,
+              dependencyType: DependencyType.RUNTIME,
               nrDependencies: 1,
               nrCalls: consumer.count,
             },

@@ -13,24 +13,24 @@ import {
  */
 export function consumerTypeToDependencyType(kind: string): DependencyType {
   switch (kind) {
-    case 'Action': return DependencyType.STRONG;
+    case 'Action': return DependencyType.COMPILE_TIME;
     case 'Entity': return DependencyType.ENTITY;
-    case 'Structure': return DependencyType.STRONG;
-    case 'ClientAction': return DependencyType.STRONG;
-    case 'WebBlock': return DependencyType.STRONG;
+    case 'Structure': return DependencyType.COMPILE_TIME;
+    case 'ClientAction': return DependencyType.COMPILE_TIME;
+    case 'WebBlock': return DependencyType.COMPILE_TIME;
     case 'StaticEntity': return DependencyType.ENTITY;
-    case 'Image': return DependencyType.STRONG;
-    case 'Script': return DependencyType.STRONG;
-    case 'Theme': return DependencyType.STRONG;
-    case 'Role': return DependencyType.STRONG;
-    case 'WebScreen': return DependencyType.STRONG;
-    case 'Resource': return DependencyType.STRONG;
+    case 'Image': return DependencyType.COMPILE_TIME;
+    case 'Script': return DependencyType.COMPILE_TIME;
+    case 'Theme': return DependencyType.COMPILE_TIME;
+    case 'Role': return DependencyType.COMPILE_TIME;
+    case 'WebScreen': return DependencyType.COMPILE_TIME;
+    case 'Resource': return DependencyType.COMPILE_TIME;
     case 'ClientEntity': return DependencyType.ENTITY;
-    case 'FlowExceptionHandlingFlow': return DependencyType.STRONG;
-    case 'ServiceAPIMethod': return DependencyType.WEAK;
-    case 'Process': return DependencyType.STRONG;
+    case 'FlowExceptionHandlingFlow': return DependencyType.COMPILE_TIME;
+    case 'ServiceAPIMethod': return DependencyType.RUNTIME;
+    case 'Process': return DependencyType.COMPILE_TIME;
 
-    case 'Integration': return DependencyType.WEAK; // Does not exist in OutSystems consumer-producer datasets,
+    case 'Integration': return DependencyType.RUNTIME; // Does not exist in OutSystems consumer-producer datasets,
       // but is included here for completeness’s sake. The integration dataset should be provided
       // separately and is parsed by the IntegrationParser.
 

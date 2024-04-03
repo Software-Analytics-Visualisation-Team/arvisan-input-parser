@@ -22,7 +22,7 @@ export default class ConsumerProducerParser extends RootParser {
 
       const dependencyType = consumerTypeToDependencyType(entry['Reference Kind']);
       let nrCalls: number | undefined;
-      if (dependencyType === DependencyType.WEAK) {
+      if (dependencyType === DependencyType.RUNTIME) {
         nrCalls = 0;
         const serviceAPIEntry = filteredServiceAPIEntries.find((e) => e.EndpointAndMethod === entry['Reference Name']);
         if (serviceAPIEntry) {
