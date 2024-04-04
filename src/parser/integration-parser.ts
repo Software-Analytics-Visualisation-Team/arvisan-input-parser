@@ -81,9 +81,9 @@ export default class IntegrationParser extends RootParser {
             target: prodModuleNode.data.id,
             label: RelationshipLabel.CALLS,
             properties: {
-              referenceType: 'Integration',
+              referenceTypes: ['Integration'],
               referenceNames: [consumer.EndpointAndMethod],
-              dependencyType: DependencyType.RUNTIME,
+              dependencyTypes: [DependencyType.RUNTIME],
               nrDependencies: 1,
               nrCalls: consumer.count,
             },

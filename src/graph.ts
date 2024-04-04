@@ -89,8 +89,8 @@ export function validateGraph(graph: Graph, propagatedProperties = false) {
     }
 
     // Dependency edges have a corresponding type
-    if (e.data.label !== 'contains' && e.data.properties.dependencyType === undefined) {
-      throw new Error(`Dependency edge ${e.data.id} with source ${e.data.source} and target ${e.data.target} has no dependency type`);
+    if (e.data.label !== 'contains' && (e.data.properties.dependencyTypes === undefined || e.data.properties.dependencyTypes.length === 0)) {
+      throw new Error(`Dependency edge ${e.data.id} with source ${e.data.source} and target ${e.data.target} has no dependency types`);
     }
 
     // Every node has at most one incoming containment edge
