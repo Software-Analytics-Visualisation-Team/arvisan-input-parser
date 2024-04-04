@@ -72,7 +72,7 @@ export default class IntegrationParser extends RootParser {
         if (dependencyEdge.data.properties.nrCalls != null) {
           dependencyEdge.data.properties.nrCalls += consumer.count;
         }
-        dependencyEdge.data.properties.referenceNames.push(consumer.EndpointAndMethod);
+        dependencyEdge.data.properties.references.get('Integration')!.push(consumer.EndpointAndMethod);
       } else {
         this.dependencyEdges.push({
           data: {
@@ -81,8 +81,7 @@ export default class IntegrationParser extends RootParser {
             target: prodModuleNode.data.id,
             label: RelationshipLabel.CALLS,
             properties: {
-              referenceTypes: ['Integration'],
-              referenceNames: [consumer.EndpointAndMethod],
+              references: new Map().set('Integration', [consumer.EndpointAndMethod]),
               dependencyTypes: [DependencyType.RUNTIME],
               nrDependencies: 1,
               nrCalls: consumer.count,

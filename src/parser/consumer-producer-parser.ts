@@ -39,8 +39,9 @@ export default class ConsumerProducerParser extends RootParser {
         if (dependencyEdge.data.properties.nrCalls != null && nrCalls) {
           dependencyEdge.data.properties.nrCalls += nrCalls;
         }
-        dependencyEdge.data.properties.referenceNames.push(entry['Reference Name']);
-        dependencyEdge.data.properties.referenceTypes.push(entry['Reference Kind']);
+        if (dependencyEdge.data.properties.references.has(entry['Reference Kind'])) {
+          dependencyEdge.data.properties.references.get(entry['Reference Kind'])!.push(entry['Reference Name']);
+        }
         dependencyEdge.data.properties.dependencyTypes?.push(dependencyType);
       } else if (dependencyEdge == null) {
         this.dependencyEdges.push({
@@ -50,8 +51,7 @@ export default class ConsumerProducerParser extends RootParser {
             target: prodModuleNode.data.id,
             label: RelationshipLabel.CALLS,
             properties: {
-              referenceTypes: [entry['Reference Kind']],
-              referenceNames: [entry['Reference Name']],
+              references: new Map().set(entry['Reference Kind'], [entry['Reference Name']]),
               dependencyTypes: [dependencyType],
               nrDependencies: 1,
               nrCalls,
@@ -62,7 +62,7 @@ export default class ConsumerProducerParser extends RootParser {
     });
 
     this.dependencyEdges.forEach((e) => {
-      e.data.properties.referenceTypes = Array.from(new Set(e.data.properties.referenceTypes));
+      e.data.properties.dependencyTypes = Array.from(new Set(e.data.properties.dependencyTypes));
     });
 
     this.trim();

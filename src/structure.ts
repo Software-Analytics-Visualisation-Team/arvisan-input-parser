@@ -94,9 +94,8 @@ export enum DependencyType {
 }
 
 export interface EdgeProperties {
-  referenceTypes: string[];
+  references: Map<string, string[]>; // mapping from type to names that are of that type
   dependencyTypes?: DependencyType[];
-  referenceNames: string[];
   nrDependencies?: number;
   nrCalls?: number;
 }
