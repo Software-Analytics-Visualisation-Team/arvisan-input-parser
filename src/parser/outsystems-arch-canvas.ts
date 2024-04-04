@@ -55,6 +55,7 @@ export function moduleSuffixToLayers(moduleName: string): {
     case 'cs':
       return { layer: ModuleLayers.CORE, sublayer: CoreLayerSublayers.CORE_SERVICE };
     case 'bl':
+    case 'sa':
       return { layer: ModuleLayers.CORE, sublayer: CoreLayerSublayers.COMPOSITE_LOGIC };
     case 'theme':
     case 'thm':
@@ -66,6 +67,7 @@ export function moduleSuffixToLayers(moduleName: string): {
         sublayer: FoundationLayerSublayers.FOUNDATION_SERVICE,
       };
     case 'lib':
+    case 'drv':
       return { layer: ModuleLayers.FOUNDATION, sublayer: FoundationLayerSublayers.LIBRARY };
     default: break;
   }
