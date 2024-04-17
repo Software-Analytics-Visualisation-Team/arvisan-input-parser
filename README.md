@@ -1,4 +1,4 @@
-# Arvisan OutSystems Architecture Parser
+# Arvisan Input Parser
 
 This script parses OutSystems consumer-producer data with functional domain (Application group) data into a labeled property graph, readable by Cytoscape JS.
 Optionally, more data can be included about dynamic REST-like integrations that OutSystems does not track, or more details/properties about individual modules.
