@@ -25,7 +25,7 @@ export default class Cohesion {
         && childIds.includes(e.data.source) && childIds.includes(e.data.target));
 
       // eslint-disable-next-line no-param-reassign
-      n.data.properties.cohesion = (dependencyEdges.length) / (childIds.length ** 2);
+      n.data.properties.cohesion = (dependencyEdges.length) / (childIds.length ** 1.5);
     });
   }
 }
