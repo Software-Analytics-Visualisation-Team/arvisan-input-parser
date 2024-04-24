@@ -6,9 +6,9 @@ import {
   Graph,
   moduleColors,
   ModuleDependencyProfileCategory,
-  ModuleLayers,
+  ModuleLayers, ModuleSublayer,
   Node,
-  RelationshipLabel,
+  RelationshipLabel, sublayerOrdering,
 } from './structure';
 
 function getName(sublayer: string) {
@@ -45,6 +45,21 @@ function createLayerViolationEdges(sublayersFrom: string[], sublayersTo: string[
   }))).flat();
 }
 
+function createSublayerViolationEdges(sublayers: ModuleSublayer[]): Edge[] {
+  return sublayers.map((to, index): Edge[] => sublayers
+    .slice(index + 1).map((from): Edge => ({
+      data: {
+        id: `${getName(from)}-${getName(to)}`,
+        label: RelationshipLabel.VIOLATES,
+        source: getName(from),
+        target: getName(to),
+        properties: {
+          references: new Map(),
+        },
+      },
+    }))).flat();
+}
+
 export function getViolationsAsGraph(): Graph {
   const endUserSublayers = Object.values(EndUserLayerSublayers);
   const coreSublayers = Object.values(CoreLayerSublayers);
@@ -56,11 +71,7 @@ export function getViolationsAsGraph(): Graph {
     ...createSublayerNodes(ModuleLayers.FOUNDATION, foundationSublayers),
   ];
 
-  const edges = [
-    ...createLayerViolationEdges(coreSublayers, endUserSublayers),
-    ...createLayerViolationEdges(foundationSublayers, endUserSublayers),
-    ...createLayerViolationEdges(foundationSublayers, coreSublayers),
-  ];
+  const edges = createSublayerViolationEdges(sublayerOrdering);
 
   return { elements: { nodes, edges } };
 }

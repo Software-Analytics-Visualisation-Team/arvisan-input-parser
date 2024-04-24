@@ -39,6 +39,19 @@ export const moduleColors = {
 
 export type ModuleSublayer = EndUserLayerSublayers | CoreLayerSublayers | FoundationLayerSublayers;
 
+export const sublayerOrdering: ModuleSublayer[] = [
+  EndUserLayerSublayers.END_USER,
+  CoreLayerSublayers.CORE,
+  CoreLayerSublayers.API,
+  CoreLayerSublayers.CORE_WIDGETS,
+  CoreLayerSublayers.COMPOSITE_LOGIC,
+  CoreLayerSublayers.CORE_SERVICE,
+  FoundationLayerSublayers.FOUNDATION,
+  FoundationLayerSublayers.STYLE_GUIDE,
+  FoundationLayerSublayers.FOUNDATION_SERVICE,
+  FoundationLayerSublayers.LIBRARY,
+];
+
 export enum ModuleDependencyProfileCategory {
   HIDDEN = 'hidden',
   INBOUND = 'inbound',

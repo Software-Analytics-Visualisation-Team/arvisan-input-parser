@@ -77,7 +77,10 @@ export default class RootParser {
       case 'cw':
         return { layer: ModuleLayers.CORE, sublayer: CoreLayerSublayers.CORE_WIDGETS };
       case 'cs':
+      case 'data':
         return { layer: ModuleLayers.CORE, sublayer: CoreLayerSublayers.CORE_SERVICE };
+      case 'core':
+        return { layer: ModuleLayers.CORE, sublayer: CoreLayerSublayers.CORE };
       case 'bl':
         return { layer: ModuleLayers.CORE, sublayer: CoreLayerSublayers.COMPOSITE_LOGIC };
       case 'theme':
