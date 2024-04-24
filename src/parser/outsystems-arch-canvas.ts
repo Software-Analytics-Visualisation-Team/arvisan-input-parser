@@ -8,14 +8,15 @@ import {
 } from '../structure';
 
 /**
- * Mapping from reference kind to edge labels
+ * Mapping from reference kind to edge labels.
+ * From https://success.outsystems.com/documentation/11/building_apps/reusing_and_refactoring/understand_strong_and_weak_dependencies/
  * @param kind
  */
 export function consumerTypeToDependencyType(kind: string): DependencyType {
   switch (kind) {
     case 'Action': return DependencyType.COMPILE_TIME;
     case 'Entity': return DependencyType.ENTITY;
-    case 'Structure': return DependencyType.COMPILE_TIME;
+    case 'Structure': return DependencyType.RUNTIME;
     case 'ClientAction': return DependencyType.COMPILE_TIME;
     case 'WebBlock': return DependencyType.COMPILE_TIME;
     case 'StaticEntity': return DependencyType.ENTITY;
@@ -23,7 +24,7 @@ export function consumerTypeToDependencyType(kind: string): DependencyType {
     case 'Script': return DependencyType.COMPILE_TIME;
     case 'Theme': return DependencyType.COMPILE_TIME;
     case 'Role': return DependencyType.COMPILE_TIME;
-    case 'WebScreen': return DependencyType.COMPILE_TIME;
+    case 'WebScreen': return DependencyType.RUNTIME;
     case 'Resource': return DependencyType.COMPILE_TIME;
     case 'ClientEntity': return DependencyType.ENTITY;
     case 'FlowExceptionHandlingFlow': return DependencyType.COMPILE_TIME;
