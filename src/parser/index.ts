@@ -1,6 +1,6 @@
 import { readFile, utils } from 'xlsx';
 import {
-  Edge, Graph, GraphLayers, Node,
+  Edge, Graph, GraphLayers, Node, unclassifiedDomainName,
 } from '../structure';
 import logger from '../logger';
 import {
@@ -108,7 +108,7 @@ export default function getGraph(
   logger.info('    Done!');
 
   logger.info('Add domain to applications that have none...');
-  const defaultDomainNode: Node = agParser.createDomainNode('no_domain');
+  const defaultDomainNode: Node = agParser.createDomainNode(unclassifiedDomainName);
   const applicationNodes = mergedNodes
     .filter((n) => n.data.labels.includes(GraphLayers.APPLICATION));
   const noDomainContainEdges = applicationNodes

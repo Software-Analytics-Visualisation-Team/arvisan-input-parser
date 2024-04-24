@@ -1,5 +1,10 @@
 import {
-  Edge, GraphLayers, ModuleDependencyProfileCategory, Node, RelationshipLabel,
+  Edge,
+  GraphLayers,
+  ModuleDependencyProfileCategory,
+  Node,
+  RelationshipLabel,
+  unclassifiedDomainName,
 } from '../../structure';
 
 const CONTAINMENT_LEVEL: GraphLayers = GraphLayers.APPLICATION;
@@ -73,13 +78,19 @@ export default class DependencyProfiles {
 
       const externalIncomingNodes = incomingNodes.filter((n2) => {
         const externalParent = this.getContainmentLevelNode(n2, CONTAINMENT_LEVEL, nodes, edges);
-        if (!externalParent) throw new Error('Parent not found');
-        return externalParent.data.id !== parent.data.id;
+        if (!externalParent) throw new Error(`Parent of node "${n2.data.id}" not found`);
+        const externalDomain = this.getContainmentLevelNode(n2, GraphLayers.DOMAIN, nodes, edges);
+        if (!externalDomain) throw new Error(`Domain of node "${n2.data.id}" not found`);
+        return externalDomain.data.properties.simpleName !== unclassifiedDomainName
+          && externalParent.data.id !== parent.data.id;
       });
       const externalOutgoingNodes = outgoingNodes.filter((n2) => {
         const externalParent = this.getContainmentLevelNode(n2, CONTAINMENT_LEVEL, nodes, edges);
-        if (!externalParent) throw new Error('Parent not found');
-        return externalParent.data.id !== parent.data.id;
+        if (!externalParent) throw new Error(`Parent of node "${n2.data.id}" not found`);
+        const externalDomain = this.getContainmentLevelNode(n2, GraphLayers.DOMAIN, nodes, edges);
+        if (!externalDomain) throw new Error(`Domain of node "${n2.data.id}" not found`);
+        return externalDomain.data.properties.simpleName !== unclassifiedDomainName
+          && externalParent.data.id !== parent.data.id;
       });
 
       if (externalIncomingNodes.length > 0 && externalOutgoingNodes.length > 0) {

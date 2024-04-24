@@ -140,3 +140,5 @@ export function formatName(id: string) {
     .replaceAll(')', '')
     .replaceAll('.', '');
 }
+
+export const unclassifiedDomainName = 'no_domain';
