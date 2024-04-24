@@ -1,5 +1,5 @@
 import {
-  Edge, Graph, GraphLayers, Node, optionalModuleProperties,
+  Edge, Graph, GraphLayers, Node, optionalModuleProperties, RelationshipLabel,
 } from './structure';
 
 /**
@@ -59,6 +59,35 @@ export function validateGraph(graph: Graph, propagatedProperties = false) {
         throw new Error(`Module node ${n.data.id} does not have a single "Module" label (has ${n.data.labels.toString()} instead).`);
       }
     });
+
+  // Check that there exist no containment edges from applications to modules.
+  // If every module then still has a parent node (a sublayer) is tested during
+  // the edge validation.
+  graph.elements.nodes.filter((n) => n.data.id.startsWith('A_') && !n.data.id.includes('__'))
+    .forEach((n) => {
+      const containmentEdges = graph.elements.edges
+        .filter((e) => e.data.label === RelationshipLabel.CONTAINS && e.data.source === n.data.id);
+      containmentEdges.forEach((edge) => {
+        const target = graph.elements.nodes.find((n) => n.data.id === edge.data.target);
+        if (!target) {
+          throw new Error(`Target node "${edge.data.target}" of edge "${edge.data.id}" cannot be found.`);
+        }
+        if (target.data.labels.includes(GraphLayers.MODULE)) {
+          throw new Error(`Application "${n.data.id}" has a containment edge "${edge.data.id}" to module "${target.data.id}"`);
+        }
+      });
+    });
+
+  // Check that every module has exactly one parent
+  // (which by the test above cannot be an application)
+  // graph.elements.nodes.filter((n) => n.data.id.startsWith('A_') && n.data.id.includes('__M_'))
+  //   .forEach((n) => {
+  //     const containmentEdges = graph.elements.edges
+  //       .filter((e) => e.data.label === RelationshipLabel.CONTAINS && e.data.target === n.data.id);
+  //     if (containmentEdges.length !== 1) {
+  //       throw new Error(`Did not find exactly one module containment edge for module "${n.data.id}", found ${containmentEdges.length} instead.`);
+  //     }
+  //   });
 
   // Check if all module properties are propagated correctly to higher layers, but only
   // if that should have happened (i.e. we have actually set such properties on the module

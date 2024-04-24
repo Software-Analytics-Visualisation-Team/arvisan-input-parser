@@ -63,11 +63,6 @@ export default class ModuleDetailsParser extends RootParser {
       moduleNode.data.properties.nrRESTConsumers = e['Count REST Consumer'];
       moduleNode.data.properties.nrRESTProducers = e['Count REST Producer'];
     });
-
-    this.trim();
-
-    const moduleNodes = this.nodes.filter((n) => n.data.labels.includes(GraphLayers.MODULE));
-    this.colorNodeBasedOnParent(moduleNodes);
   }
 
   /**

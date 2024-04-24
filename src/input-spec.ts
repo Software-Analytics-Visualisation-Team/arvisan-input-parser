@@ -36,10 +36,12 @@ export interface ConsumerProducerEntry {
  * Required: yes
  */
 export interface ApplicationGroupEntry {
-  ApplicationGroupName: string; // Functional domain name
-  ApplicationName: string; // Application name
-  // ModuleKind: string; // not used
-  ModuleName: string; // Module name
+  /** Name of the functional domain */
+  ApplicationGroupName?: string; // Functional domain name
+  ApplicationName: string;
+  /** Optional name of the sublayer, should be one of ./src/structure.ts::ModuleSublayer */
+  SubLayerName?: string;
+  ModuleName: string;
 }
 
 /**

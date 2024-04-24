@@ -1,6 +1,6 @@
 import { readFile, utils } from 'xlsx';
 import {
-  Edge, Graph, GraphLayers, Node, unclassifiedDomainName,
+  Edge, Graph, GraphLayers, Node,
 } from '../structure';
 import logger from '../logger';
 import {
@@ -15,16 +15,21 @@ import IntegrationParser from './integration-parser';
 import DependencyProfiles from './metrics/dependency-profiles';
 import Cohesion from './metrics/cohesion';
 import ModuleDetailsParser from './module-details-parser';
+import GraphPostProcessor from './graph-post-processor';
 
 function removeDuplicates<T extends Node | Edge>(elements: T[]) {
-  return elements.filter((n, index, all) => index === all
-    .findIndex((n2) => n.data.id === n2.data.id));
+  const seenElements = new Set<string>();
+  return elements.filter((n) => {
+    if (seenElements.has(n.data.id)) return false;
+    seenElements.add(n.data.id);
+    return true;
+  });
 }
 
 /**
  * Parse the given files to a Neo4j / Cytoscape graph object
- * @param structureFile File containing the structure of the landscape (domains, applications and
- * modules).
+ * @param structureFiles Files containing the structure of the landscape
+ * (domains, applications, sublayers, and modules).
  * @param dependencyFiles One or more files containing consumers and producers.
  * @param integrationFile Optional file containing dynamic data about integrations and service APIs.
  * @param detailsFiles Optional one or more files containing more details about modules.
@@ -32,7 +37,7 @@ function removeDuplicates<T extends Node | Edge>(elements: T[]) {
  * should be included in the resulting graph
  */
 export default function getGraph(
-  structureFile: string,
+  structureFiles: string[],
   dependencyFiles: string[],
   integrationFile?: string,
   detailsFiles: string[] = [],
@@ -40,9 +45,11 @@ export default function getGraph(
 ): Graph {
   logger.info('Loading files...');
 
-  const applicationWorkbook = readFile(structureFile);
-  const applicationEntries: ApplicationGroupEntry[] = utils
-    .sheet_to_json(applicationWorkbook.Sheets[applicationWorkbook.SheetNames[0]]);
+  const applicationWorkbooks = structureFiles.map((file) => readFile(file));
+  const applicationEntries: ApplicationGroupEntry[] = applicationWorkbooks
+    .map((workbook): ApplicationGroupEntry[] => utils
+      .sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]))
+    .flat();
 
   const consumerProducerWorkbooks = dependencyFiles.map((file) => readFile(file));
   const consumerProducerEntries = consumerProducerWorkbooks
@@ -52,7 +59,7 @@ export default function getGraph(
 
   const dynamicDataWorkbook = integrationFile ? readFile(integrationFile) : undefined;
   const dynamicDataEntries: IntegrationServiceAPIEntry[] | undefined = dynamicDataWorkbook ? utils
-    .sheet_to_json(dynamicDataWorkbook.Sheets[applicationWorkbook.SheetNames[0]]) : undefined;
+    .sheet_to_json(dynamicDataWorkbook.Sheets[dynamicDataWorkbook.SheetNames[0]]) : undefined;
   const integrationEntries = dynamicDataEntries ? dynamicDataEntries.filter((e) => e.logtype === 'Integration') : undefined;
   const serviceAPIEntries = dynamicDataEntries ? dynamicDataEntries.filter((e) => e.logtype === 'ServiceAPI') : undefined;
 
@@ -91,35 +98,32 @@ export default function getGraph(
   }
 
   logger.info('Merging datasets...');
-  const mergedNodes = removeDuplicates([
-    ...modDetailsParser ? modDetailsParser.nodes : [],
-    ...cpParser.nodes,
-    ...agParser.nodes,
-    ...intParser ? intParser.nodes : [],
-  ]);
-  const mergedEdges = removeDuplicates([
-    ...modDetailsParser ? modDetailsParser.containEdges : [],
-    ...cpParser.containEdges,
-    ...cpParser.dependencyEdges,
-    ...agParser.containEdges,
-    ...intParser ? intParser.containEdges : [],
-    ...intParser ? intParser.dependencyEdges : [],
-  ]);
+  const mergedNodes = removeDuplicates(
+    (modDetailsParser ? modDetailsParser.nodes : [])
+      .concat(cpParser.nodes)
+      .concat(agParser.nodes)
+      .concat(intParser ? intParser.nodes : []),
+  );
+  const mergedContainEdges = removeDuplicates(
+    (modDetailsParser ? modDetailsParser.containEdges : [])
+      .concat(cpParser.containEdges)
+      .concat(agParser.containEdges)
+      .concat(intParser ? intParser.containEdges : []),
+  );
+  const mergedDependencyEdges = removeDuplicates(
+    cpParser.dependencyEdges
+      .concat(intParser ? intParser.dependencyEdges : []),
+  );
   logger.info('    Done!');
 
-  logger.info('Add domain to applications that have none...');
-  const defaultDomainNode: Node = agParser.createDomainNode(unclassifiedDomainName);
-  const applicationNodes = mergedNodes
-    .filter((n) => n.data.labels.includes(GraphLayers.APPLICATION));
-  const noDomainContainEdges = applicationNodes
-    // Application only has incoming/outgoing dependency edges
-    .filter((applicationNode) => !mergedEdges
-      .find((e) => e.data.target === applicationNode.data.id))
-    .map((applicationNode) => agParser.createContainEdge(defaultDomainNode, applicationNode));
-  logger.info('    Done!');
+  const postProcessor = new GraphPostProcessor(
+    mergedNodes,
+    mergedContainEdges,
+    includeModuleLayerLayer,
+  );
 
-  const nodes = [defaultDomainNode, ...mergedNodes];
-  const edges = [...mergedEdges, ...noDomainContainEdges];
+  const { nodes } = postProcessor;
+  const edges = postProcessor.containEdges.concat(mergedDependencyEdges);
 
   if (modDetailsParser) {
     logger.info('Propagating module properties to parent nodes...');

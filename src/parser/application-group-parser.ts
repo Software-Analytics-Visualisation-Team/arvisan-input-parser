@@ -1,6 +1,6 @@
 import RootParser from './root-parser';
 import { ApplicationGroupEntry } from '../input-spec';
-import { GraphLayers } from '../structure';
+import { GraphLayers, Node } from '../structure';
 
 export default class ApplicationGroupParser extends RootParser {
   constructor(entries: ApplicationGroupEntry[], includeModuleLayerLayer: boolean) {
@@ -14,23 +14,22 @@ export default class ApplicationGroupParser extends RootParser {
       // be part of only one domain. Therefore, skip this entry (quick 'n dirty fix)
       if (i !== foundIndex) return;
 
-      const domainId = this.getDomainId(e.ApplicationGroupName);
-      let domainNode = this.getNode(domainId);
-      if (domainNode == null) {
-        domainNode = this.createDomainNode(e.ApplicationGroupName);
-        this.nodes.push(domainNode);
+      let domainNode: Node | undefined;
+      if (e.ApplicationGroupName) {
+        const domainId = this.getDomainId(e.ApplicationGroupName);
+        domainNode = this.getNode(domainId);
+        if (domainNode == null) {
+          domainNode = this.createDomainNode(e.ApplicationGroupName);
+          this.nodes.push(domainNode);
+        }
       }
 
       this.getApplicationAndModule(
         e.ApplicationName,
         e.ModuleName,
         domainNode,
+        e.SubLayerName,
       );
     });
-
-    this.trim();
-
-    const moduleNodes = this.nodes.filter((n) => n.data.labels.includes(GraphLayers.MODULE));
-    this.colorNodeBasedOnParent(moduleNodes);
   }
 }

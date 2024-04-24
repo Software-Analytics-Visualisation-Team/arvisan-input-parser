@@ -30,11 +30,6 @@ export default class IntegrationParser extends RootParser {
 
     validGroupedIntegrations
       .forEach((group) => this.parseGroupedIntegration(group));
-
-    this.trim();
-
-    const moduleNodes = this.nodes.filter((n) => n.data.labels.includes(GraphLayers.MODULE));
-    this.colorNodeBasedOnParent(moduleNodes);
   }
 
   /**

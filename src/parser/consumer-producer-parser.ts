@@ -64,10 +64,5 @@ export default class ConsumerProducerParser extends RootParser {
     this.dependencyEdges.forEach((e) => {
       e.data.properties.dependencyTypes = Array.from(new Set(e.data.properties.dependencyTypes));
     });
-
-    this.trim();
-
-    const moduleNodes = this.nodes.filter((n) => n.data.labels.includes(GraphLayers.MODULE));
-    this.colorNodeBasedOnParent(moduleNodes);
   }
 }

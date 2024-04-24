@@ -13,6 +13,12 @@ import {
   Node,
   RelationshipLabel,
 } from '../structure';
+import logger from '../logger';
+
+interface LayerResult {
+  layer: ModuleLayers,
+  sublayer: ModuleSublayer,
+}
 
 export default class RootParser {
   public nodes: Node[] = [];
@@ -48,6 +54,13 @@ export default class RootParser {
     return format(`${applicationId}__${layer}`);
   }
 
+  /**
+   * Get the ID of the parent node that belongs to the given application
+   * @param applicationId
+   * @param layer
+   * @param sublayer
+   * @protected
+   */
   protected getApplicationWithSublayerId(
     applicationId: string,
     layer?: ModuleLayers | string,
@@ -62,14 +75,43 @@ export default class RootParser {
     return format(`A_${applicationName}__M_${moduleName}`);
   }
 
+  /** Convert a string to pascal case (upper camel case) */
+  private pascalize(str: string) {
+    return str.replace(/^\w|[A-Z]|\b\w/g, (word) => word.toUpperCase()).replace(/\s+/g, '');
+  }
+
+  /**
+   * Given the sublayer name, return its layer and sublayer references for processing
+   * @param sublayerName
+   * @private
+   */
+  private sublayerNameToLayers(sublayerName: string): LayerResult | undefined {
+    const parsedName = this.pascalize(sublayerName);
+
+    const endUserSublayers = Object.values(EndUserLayerSublayers);
+    const coreSublayers = Object.values(CoreLayerSublayers);
+    const foundationSublayers = Object.values(FoundationLayerSublayers);
+
+    if (endUserSublayers.includes(parsedName as EndUserLayerSublayers)) {
+      return { layer: ModuleLayers.END_USER, sublayer: EndUserLayerSublayers.END_USER };
+    }
+    if (coreSublayers.includes(parsedName as CoreLayerSublayers)) {
+      return { layer: ModuleLayers.CORE, sublayer: parsedName as CoreLayerSublayers };
+    }
+    if (foundationSublayers.includes(parsedName as FoundationLayerSublayers)) {
+      return { layer: ModuleLayers.FOUNDATION, sublayer: parsedName as FoundationLayerSublayers };
+    }
+
+    logger.warn(`Could not match sublayer "${sublayerName}" with any sublayer definitions.`);
+    return undefined;
+  }
+
   /**
    * Given the name of a module, extract the type of module based on its extension
    * If no explicit defined extension, the module will be of layer Enduser
    * @param moduleName
    */
-  private moduleSuffixToLayers(moduleName: string): {
-    layer: ModuleLayers, sublayer: ModuleSublayer,
-  } {
+  protected moduleSuffixToLayers(moduleName: string): LayerResult {
     const suffix = moduleName.split('_').pop()?.toLowerCase();
     switch (suffix) {
       case 'api':
@@ -334,10 +376,13 @@ export default class RootParser {
 
   /**
    * Given a application with one of its module, return any new application nodes,
-   * module nodes, and (sub)layer nodes with their containment edges
+   * module nodes, and (sub)layer nodes with their containment edges. If no
+   * sublayerName is provided, a containment edge will be added between the
+   * application and the module.
    * @param applicationName Name of the application
    * @param moduleName Name of the module
    * @param domainNode Optional domain node belonging to this application/module
+   * @param sublayerName Optional name of the sublayer to create a sublayer containment edge
    * @private
    * @returns Module node
    */
@@ -345,7 +390,9 @@ export default class RootParser {
     applicationName: string,
     moduleName: string,
     domainNode?: Node,
+    sublayerName?: string,
   ): Node {
+    // Find or create the application node
     const appId = this.getApplicationId(applicationName);
     let appNode = this.getNode(appId);
     if (!appNode) {
@@ -363,15 +410,23 @@ export default class RootParser {
       this.containEdges.push(...layerEdges);
     }
 
+    // Find or create the module node
     const moduleId = this.getModuleId(applicationName, moduleName);
     let moduleNode = this.getNode(moduleId);
     if (!moduleNode) {
       moduleNode = this.createModuleNode(applicationName, moduleName);
+      this.nodes.push(moduleNode);
+    }
 
+    // Try to find the (sub)layer definitions for this module if explicitly given
+    const layers = sublayerName ? this.sublayerNameToLayers(sublayerName) : undefined;
+    if (layers) {
+      // If found, create a containment edge between from sublayer node to the module
       const {
         layer: moduleLayer,
         sublayer: moduleSublayer,
-      } = this.moduleSuffixToLayers(moduleName);
+      } = layers;
+
       const parentId = this.getApplicationWithSublayerId(appId, moduleLayer, moduleSublayer);
       const parentNode = this.getNode(parentId);
       if (!parentNode) {
@@ -379,8 +434,16 @@ export default class RootParser {
       }
 
       const containsEdge = this.createContainEdge(parentNode, moduleNode);
-
-      this.nodes.push(moduleNode);
+      this.containEdges.push(containsEdge);
+    } else {
+      // If not found, create a containment edge from the application node to the module.
+      // Note that these edges are not allowed by the output spec, so this edge needs to
+      // be replaced by an actual sublayer containment edge. Unfortunately, we cannot do
+      // the suffix classification at this stage, because then this module could have two
+      // containment edges from two different sublayers (a manual and a suffix
+      // classification one). These edges are indistinguishable, so we have no idea which
+      // edge is the "true" one.
+      const containsEdge = this.createContainEdge(appNode, moduleNode);
       this.containEdges.push(containsEdge);
     }
 

@@ -24,7 +24,7 @@ program
   .option('-j, --json', 'output the resulting graph as a .json file')
   .option('-c, --csv', 'output the resulting graph as a .csv file with nodes and a .csv file with edges')
   .option('-l, --layer', 'include "layer" nodes in the resulting graph')
-  .requiredOption('-g, --grouping <file>', 'location of domain (application group) dataset')
+  .requiredOption('-g, --grouping <files>', 'location of domain (application group) and sublayer dataset(s)', groupInputFiles, [])
   .requiredOption('-d, --dependencies <files>', 'one or more locations of dependency dataset(s)', groupInputFiles, [])
   .option('-i, --integrations <file>', 'location of integration/service API dataset')
   .option('-m, --moduleDetails <files>', 'one or more locations of module details dataset(s)', groupInputFiles, []);
