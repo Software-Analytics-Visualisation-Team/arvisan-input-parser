@@ -29,12 +29,12 @@ function createQuery(g: Graph): string {
   return query;
 }
 
-export default async function injectGraph(graph: Graph, password: string, url = 'bolt://localhost:7687') {
+export default async function injectGraph(graph: Graph, password: string, databaseName: string, url = 'bolt://localhost:7687') {
   logger.info('Seeding Neo4j database...');
 
-  const driver = neo4j.driver(url, neo4j.auth.basic('neo4j', password));
+  const driver = neo4j.driver(url, neo4j.auth.basic('neo4j', password), { });
 
-  const session = driver.session();
+  const session = driver.session({ database: databaseName });
   try {
     await session.run('MATCH (n) DETACH delete n');
   } catch (e) {
@@ -58,7 +58,7 @@ export default async function injectGraph(graph: Graph, password: string, url = 
   }
 }
 
-export function importGraphIntoNeo4j(neo4jHomeDir: string, nodesFile = 'nodes.csv', edgesFile = 'relationships.csv') {
+export function importGraphIntoNeo4j(neo4jHomeDir: string, databaseName = 'neo4j', nodesFile = 'nodes.csv', edgesFile = 'relationships.csv') {
   if (!fs.existsSync(neo4jHomeDir)) {
     throw new Error('Neo4j Home Directory cannot be found. See https://neo4j.com/docs/operations-manual/current/configuration/file-locations/ to find the path to your home directory.');
   }
@@ -75,5 +75,5 @@ export function importGraphIntoNeo4j(neo4jHomeDir: string, nodesFile = 'nodes.cs
   fs.copyFileSync(nodesFile, path.join(neo4jHomeDir, '/import/nodes.csv'));
   fs.copyFileSync(edgesFile, path.join(neo4jHomeDir, '/import/relationships.csv'));
 
-  execSync(`${executablePath} database import full --overwrite-destination --nodes=import/nodes.csv --relationships=import/relationships.csv neo4j`, { stdio: 'inherit' });
+  execSync(`${executablePath} database import full --overwrite-destination --nodes=import/nodes.csv --relationships=import/relationships.csv ${databaseName}`, { stdio: 'inherit' });
 }

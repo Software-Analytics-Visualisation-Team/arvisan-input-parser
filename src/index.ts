@@ -19,6 +19,7 @@ program
   .name('npm run transform')
   .description('Small tool to parse OutSystems architecture/dependency datasets into ')
   .option('-s, --seedLocal <Neo4jHomeDir>', 'seed the resulting graph the Neo4j database, which can be found at the given Neo4j home directory')
+  .option('--database <name>', 'name of the Neo4j database, defaults to "neo4j"')
   .option('--seedRemotePassword <password>', 'seed the resulting graph the Neo4j database, which can be accessed using the given password')
   .option('--seedRemoteUrl <password>', 'seed the resulting graph the Neo4j database, which can be found at the given url (optional)')
   .option('-j, --json', 'output the resulting graph as a .json file')
@@ -67,7 +68,7 @@ if (options.csv || options.seedLocal) {
 
 if (options.seedLocal) {
   logger.info('Start seeding to Neo4j database...');
-  importGraphIntoNeo4j(options.seedLocal);
+  importGraphIntoNeo4j(options.seedLocal, options.database);
   logger.info('    Done!');
 }
 
