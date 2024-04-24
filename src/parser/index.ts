@@ -130,7 +130,7 @@ export default function getGraph(
   logger.info('Calculate metrics...');
   logger.info('  Dependency types...');
   const moduleNodes = nodes.filter((n) => n.data.labels.includes(GraphLayers.MODULE));
-  DependencyProfiles.find(moduleNodes, nodes, edges);
+  new DependencyProfiles().find(moduleNodes, nodes, edges);
   logger.info('    Done!');
   logger.info('  Cohesion....');
   Cohesion.find(nodes, edges);

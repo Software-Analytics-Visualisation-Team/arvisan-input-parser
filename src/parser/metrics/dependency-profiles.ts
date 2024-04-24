@@ -18,20 +18,32 @@ const CONTAINMENT_LEVEL: GraphLayers = GraphLayers.APPLICATION;
  */
 export default class DependencyProfiles {
   /**
+   * Mapping of a node to a list of its ancestors. Used to reduce computation time of
+   * @private
+   */
+  private ancestorsCache = new Map<Node, Node[]>();
+
+  /**
    * Given a node, get a list of all this node's parent nodes (including itself).
    * @param node
    * @param allNodes
    * @param allEdges
    * @private
    */
-  private static getParents(node: Node, allNodes: Node[], allEdges: Edge[]): Node[] {
+  private getAncestors(node: Node, allNodes: Node[], allEdges: Edge[]): Node[] {
+    if (this.ancestorsCache.has(node)) {
+      return this.ancestorsCache.get(node)!;
+    }
+
     const containEdge = allEdges.find((e) => e.data.label === RelationshipLabel.CONTAINS
       && e.data.target === node.data.id);
     if (containEdge === undefined) return [node];
     const parentNode = allNodes.find((n) => n.data.id === containEdge.data.source);
     if (parentNode === undefined) return [node];
 
-    return [node, ...this.getParents(parentNode, allNodes, allEdges)];
+    const ancestors = [node, ...this.getAncestors(parentNode, allNodes, allEdges)];
+    this.ancestorsCache.set(node, ancestors);
+    return ancestors;
   }
 
   /**
@@ -42,13 +54,13 @@ export default class DependencyProfiles {
    * @param allEdges
    * @private
    */
-  private static getContainmentLevelNode(
+  private getContainmentLevelNode(
     node: Node,
     level: GraphLayers,
     allNodes: Node[],
     allEdges: Edge[],
   ): Node | undefined {
-    const parents = this.getParents(node, allNodes, allEdges);
+    const parents = this.getAncestors(node, allNodes, allEdges);
     return parents.find((p) => p.data.labels.includes(level));
   }
 
@@ -58,7 +70,7 @@ export default class DependencyProfiles {
    * @param nodes
    * @param edges
    */
-  static find(moduleNodes: Node[], nodes: Node[], edges: Edge[]) {
+  find(moduleNodes: Node[], nodes: Node[], edges: Edge[]) {
     moduleNodes.forEach((n) => {
       const parent = this.getContainmentLevelNode(n, CONTAINMENT_LEVEL, nodes, edges);
       if (!parent) throw new Error('Parent not found');
