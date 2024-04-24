@@ -14,3 +14,7 @@ data
 *.xls
 *.xlsx
 *.ods
+
+# Archives which could contain data
+*.tar*
+*.zip

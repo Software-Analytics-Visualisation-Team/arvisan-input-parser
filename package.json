@@ -16,10 +16,12 @@
     "neo4j-driver": "^5.19.0",
     "pino": "^8.20.0",
     "pino-pretty": "^11.0.0",
+    "stringify-object": "^5.0.0",
     "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.2/xlsx-0.20.2.tgz"
   },
   "devDependencies": {
     "@types/node": "^20.12.7",
+    "@types/stringify-object": "^4.0.5",
     "@typescript-eslint/eslint-plugin": "^7.7.0",
     "@typescript-eslint/parser": "^7.7.0",
     "eslint": "^8.57.0",
