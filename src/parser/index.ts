@@ -35,6 +35,7 @@ function removeDuplicates<T extends Node | Edge>(elements: T[]) {
  * @param detailsFiles Optional one or more files containing more details about modules.
  * @param includeModuleLayerLayer Whether the "Layer" layer from the OutSystems Architecture Canvas
  * should be included in the resulting graph
+ * @param anonymize Whether the output graph should be anonymized
  */
 export default function getGraph(
   structureFiles: string[],
@@ -42,6 +43,7 @@ export default function getGraph(
   integrationFile?: string,
   detailsFiles: string[] = [],
   includeModuleLayerLayer = false,
+  anonymize = false,
 ): Graph {
   logger.info('Loading files...');
 
@@ -119,11 +121,13 @@ export default function getGraph(
   const postProcessor = new GraphPostProcessor(
     mergedNodes,
     mergedContainEdges,
+    mergedDependencyEdges,
     includeModuleLayerLayer,
+    anonymize,
   );
 
   const { nodes } = postProcessor;
-  const edges = postProcessor.containEdges.concat(mergedDependencyEdges);
+  const edges = postProcessor.containEdges.concat(postProcessor.dependencyEdges);
 
   if (modDetailsParser) {
     logger.info('Propagating module properties to parent nodes...');

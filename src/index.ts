@@ -28,7 +28,8 @@ program
   .requiredOption('-g, --grouping <files>', 'location of domain (application group) and sublayer dataset(s)', groupInputFiles, [])
   .requiredOption('-d, --dependencies <files>', 'one or more locations of dependency dataset(s)', groupInputFiles, [])
   .option('-i, --integrations <file>', 'location of integration/service API dataset')
-  .option('-m, --moduleDetails <files>', 'one or more locations of module details dataset(s)', groupInputFiles, []);
+  .option('-m, --moduleDetails <files>', 'one or more locations of module details dataset(s)', groupInputFiles, [])
+  .option('-a, --anonymize', 'output should be anonymized with');
 
 program.parse();
 
@@ -40,6 +41,7 @@ const graph = getGraph(
   options.integrations,
   options.moduleDetails,
   !!options.layer,
+  !!options.anonymize,
 );
 const violations = getViolationsAsGraph();
 logger.info(`Generated LPG with ${graph.elements.nodes.length} nodes and ${graph.elements.edges.length} edges.`);

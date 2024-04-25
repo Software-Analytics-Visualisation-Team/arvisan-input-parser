@@ -8,11 +8,21 @@ import RootParser from './root-parser';
  * Parser that finalizes the given graph, such that it meets the output specification
  */
 export default class GraphPostProcessor extends RootParser {
-  constructor(public nodes: Node[], public containEdges: Edge[], includeModuleLayerLayer: boolean) {
+  constructor(
+    public nodes: Node[],
+    public containEdges: Edge[],
+    public dependencyEdges: Edge[],
+    includeModuleLayerLayer: boolean,
+    anonymize: boolean,
+  ) {
     super(includeModuleLayerLayer);
 
     this.addNoDomainClassification();
     this.addManualModuleSublayerClassification();
+
+    if (anonymize) {
+      this.anonymizeGraph();
+    }
 
     this.trim();
 
@@ -110,5 +120,138 @@ export default class GraphPostProcessor extends RootParser {
     this.containEdges = this.containEdges.concat(noDomainContainEdges);
 
     logger.info('    Done!');
+  }
+
+  /**
+   * Anonymize the graph by replacing all node/edge names.
+   * Note that this is a destructive operation, which makes it impossible
+   * to match this graph with any other graphs.
+   * Nodes will get a counter as name and ID.
+   * Edges will get a random UUID as ID.
+   */
+  private anonymizeGraph() {
+    const counters: { [key in GraphLayers]: number } = {
+      [GraphLayers.DOMAIN]: 0,
+      [GraphLayers.APPLICATION]: 0,
+      [GraphLayers.LAYER]: 0,
+      [GraphLayers.SUB_LAYER]: 0,
+      [GraphLayers.MODULE]: 0,
+    };
+    let referenceCounter = 1;
+
+    const getIdNumber = (layer: GraphLayers | 'reference') => {
+      if (layer === 'reference') {
+        referenceCounter += 1;
+        return referenceCounter;
+      }
+      counters[layer] += 1;
+      return counters[layer];
+    };
+
+    // Sanity runtime check that every layer has a counter
+    if (Object.keys(GraphLayers).length !== Object.keys(counters).length) {
+      throw new Error('Missing some counter keys.');
+    }
+
+    // Mapping from old node ID to new node ID
+    const nodeIdMapping = new Map<string, string>();
+
+    this.nodes = this.nodes.map((n) => {
+      const [label] = n.data.labels;
+      let newNode: Node;
+      switch (label) {
+        case GraphLayers.DOMAIN:
+          newNode = this.createDomainNode(`Domain_${getIdNumber(label)}`);
+          break;
+        case GraphLayers.APPLICATION:
+          newNode = this.createApplicationNode(`Application_${getIdNumber(label)}`);
+          break;
+        case GraphLayers.MODULE:
+          newNode = this.createModuleNode('', `Module_${getIdNumber(label)}`);
+          break;
+        case GraphLayers.LAYER:
+        case GraphLayers.SUB_LAYER:
+          return n;
+        default:
+          throw new Error(`Unknown graph layer: ${label}`);
+      }
+
+      nodeIdMapping.set(n.data.id, newNode.data.id);
+      return newNode;
+    }).map((n) => {
+      const [label] = n.data.labels;
+      let newNode: Node;
+      let newNodeId: string;
+      let applicationId: string;
+      switch (label) {
+        case GraphLayers.DOMAIN:
+        case GraphLayers.APPLICATION:
+        case GraphLayers.MODULE:
+          // Already anonymized
+          return n;
+        case GraphLayers.LAYER:
+          applicationId = this.getApplicationIdFromLayer(n.data.id);
+          newNodeId = `Layer_${getIdNumber(label)}`;
+          newNode = {
+            data: {
+              id: newNodeId,
+              labels: n.data.labels,
+              properties: {
+                ...n.data.properties,
+                fullName: `${nodeIdMapping.get(applicationId) ?? ''} ${newNodeId}`.trim(),
+                simpleName: newNodeId,
+              },
+            },
+          };
+          break;
+        case GraphLayers.SUB_LAYER:
+          applicationId = this.getApplicationIdFromLayer(n.data.id);
+          newNodeId = `Sublayer_${getIdNumber(label)}`;
+          newNode = {
+            data: {
+              id: newNodeId,
+              labels: n.data.labels,
+              properties: {
+                ...n.data.properties,
+                fullName: `${nodeIdMapping.get(applicationId) ?? ''} ${newNodeId}`.trim(),
+                simpleName: newNodeId,
+              },
+            },
+          };
+          break;
+        default:
+          throw new Error(`Unknown graph layer: ${label}`);
+      }
+
+      nodeIdMapping.set(n.data.id, newNode.data.id);
+      return newNode;
+    });
+
+    const anonymizeEdge = (e: Edge): Edge => {
+      const source = nodeIdMapping.get(e.data.source);
+      const target = nodeIdMapping.get(e.data.target);
+      if (!source || !target) throw new Error('Edge source or target not found.');
+
+      const references = new Map<string, string[]>();
+      e.data.properties.references.forEach((values, key) => {
+        references.set(key, values.map((v) => `Reference_${getIdNumber('reference')}`));
+      });
+
+      return {
+        data: {
+          id: `${source}__${target}`,
+          source,
+          target,
+          label: e.data.label,
+          properties: {
+            ...e.data.properties,
+            references,
+          },
+        },
+      };
+    };
+
+    this.containEdges = this.containEdges.map(anonymizeEdge);
+    this.dependencyEdges = this.dependencyEdges.map(anonymizeEdge);
   }
 }

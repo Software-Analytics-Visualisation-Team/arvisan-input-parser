@@ -71,6 +71,17 @@ export default class RootParser {
     return format(`${applicationWithLayerId}__${sublayer}`);
   }
 
+  /**
+   * Revert the mapping done by getApplicationWithSublayerId and getApplicationWithLayerId
+   * to extract only the application ID
+   * @param layerId
+   * @protected
+   */
+  protected getApplicationIdFromLayer(layerId: string) {
+    const [applicationId] = layerId.split('__')[0];
+    return applicationId;
+  }
+
   protected getModuleId(applicationName: string, moduleName: string) {
     return format(`A_${applicationName}__M_${moduleName}`);
   }
@@ -250,7 +261,7 @@ export default class RootParser {
                 dependencyProfileCategory: ModuleDependencyProfileCategory.NONE,
                 cohesion: 0,
               },
-              labels: [`layer_${layer}`, GraphLayers.LAYER],
+              labels: [GraphLayers.LAYER, `layer_${layer}`],
             },
           };
           const layerEdge: Edge = {
@@ -291,7 +302,7 @@ export default class RootParser {
                 dependencyProfileCategory: ModuleDependencyProfileCategory.NONE,
                 cohesion: 0,
               },
-              labels: [`Sublayer_${subLayer}`, GraphLayers.SUB_LAYER],
+              labels: [GraphLayers.SUB_LAYER, `Sublayer_${subLayer}`],
             },
           });
 
