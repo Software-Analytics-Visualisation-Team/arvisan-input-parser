@@ -1,4 +1,4 @@
-import { readFile, utils } from 'xlsx';
+import { read, readFile, utils } from 'xlsx';
 import {
   Edge, Graph, GraphLayers, Node,
 } from '../structure';
@@ -38,34 +38,34 @@ function removeDuplicates<T extends Node | Edge>(elements: T[]) {
  * @param anonymize Whether the output graph should be anonymized
  */
 export default function getGraph(
-  structureFiles: string[],
-  dependencyFiles: string[],
-  integrationFile?: string,
-  detailsFiles: string[] = [],
+  structureFiles: Buffer[],
+  dependencyFiles: Buffer[],
+  integrationFile?: Buffer,
+  detailsFiles: Buffer[] = [],
   includeModuleLayerLayer = false,
   anonymize = false,
 ): Graph {
-  logger.info('Loading files...');
+  logger.info('Parsing files...');
 
-  const applicationWorkbooks = structureFiles.map((file) => readFile(file));
+  const applicationWorkbooks = structureFiles.map((file) => read(file));
   const applicationEntries: ApplicationGroupEntry[] = applicationWorkbooks
     .map((workbook): ApplicationGroupEntry[] => utils
       .sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]))
     .flat();
 
-  const consumerProducerWorkbooks = dependencyFiles.map((file) => readFile(file));
+  const consumerProducerWorkbooks = dependencyFiles.map((file) => read(file));
   const consumerProducerEntries = consumerProducerWorkbooks
     .map((workbook): ConsumerProducerEntry[] => utils
       .sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]))
     .flat();
 
-  const dynamicDataWorkbook = integrationFile ? readFile(integrationFile) : undefined;
+  const dynamicDataWorkbook = integrationFile ? read(integrationFile) : undefined;
   const dynamicDataEntries: IntegrationServiceAPIEntry[] | undefined = dynamicDataWorkbook ? utils
     .sheet_to_json(dynamicDataWorkbook.Sheets[dynamicDataWorkbook.SheetNames[0]]) : undefined;
   const integrationEntries = dynamicDataEntries ? dynamicDataEntries.filter((e) => e.logtype === 'Integration') : undefined;
   const serviceAPIEntries = dynamicDataEntries ? dynamicDataEntries.filter((e) => e.logtype === 'ServiceAPI') : undefined;
 
-  const moduleDetailsWorkbooks = detailsFiles.map((file) => readFile(file));
+  const moduleDetailsWorkbooks = detailsFiles.map((file) => read(file));
   const moduleDetailsEntries = moduleDetailsWorkbooks
     .map((workbook): ModuleDetailsEntry[] => utils
       .sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]))

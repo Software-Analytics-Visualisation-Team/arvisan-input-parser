@@ -7,6 +7,7 @@ import logger from './logger';
 import graphToCsv from './csv';
 import { getViolationsAsGraph } from './violations';
 import { Graph } from './structure';
+import { readFileFromDisk } from './read-files';
 
 function groupInputFiles(newFile: string, allFiles: string[]) {
   allFiles.push(newFile);
@@ -35,11 +36,18 @@ program.parse();
 
 const options = program.opts();
 
+logger.info('Reading files from disk...');
+const groupingData = options.grouping.map(readFileFromDisk);
+const dependencyFiles = options.dependencies.map(readFileFromDisk);
+const integrationFile = readFileFromDisk(options.integrations);
+const detailsFiles = options.moduleDetails.map(readFileFromDisk);
+logger.info('    Done!');
+
 const graph = getGraph(
-  options.grouping,
-  options.dependencies,
-  options.integrations,
-  options.moduleDetails,
+  groupingData,
+  dependencyFiles,
+  integrationFile,
+  detailsFiles,
   !!options.layer,
   !!options.anonymize,
 );
