@@ -1,35 +1,16 @@
 import neo4j from 'neo4j-driver';
-import stringifyObject from 'stringify-object';
 import { execSync } from 'node:child_process';
 import fs from 'fs';
 import path from 'node:path';
-import { Edge, Graph, Node } from './structure';
-import { getViolationsAsGraph } from './violations';
 import logger from './logger';
 
-function createNodeQuery(n: Node): string {
-  const propertiesString = Object.keys(n.data.properties)
-    .filter((key) => !['traces'].includes(key))
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore
-    .map((key) => `${key}: ${JSON.stringify(n.data.properties[key])}`).join(', ');
-  return `(${n.data.id}:${n.data.labels[0]} {id: '${n.data.id}', ${propertiesString}})`;
-}
-
-function createEdgeQuery(e: Edge, nodes: Node[]): string {
-  const source = nodes.find((n) => n.data.id === e.data.source);
-  const target = nodes.find((n) => n.data.id === e.data.target);
-  if (source == null || target == null) throw new Error('Source and/or target nodes do not exist');
-  return `(${e.data.source})-[:${e.data.label.toUpperCase()} ${stringifyObject({ ...e.data.properties, id: e.data.id }, { singleQuotes: false })}]->(${e.data.target})`;
-}
-
-function createQuery(g: Graph): string {
-  const query = `CREATE ${g.elements.nodes.map((n) => createNodeQuery(n)).join(', ')}, ${g.elements.edges.map((e) => createEdgeQuery(e, g.elements.nodes))}`;
-  logger.info('  Built query...');
-  return query;
-}
-
-export default async function injectGraph(graph: Graph, password: string, databaseName: string, url = 'bolt://localhost:7687') {
+export async function injectGraphCypher(
+  password: string,
+  databaseName?: string,
+  url = 'bolt://localhost:7687',
+  nodesFile = 'file:///nodes.csv',
+  edgesFile = 'file:///relationships.csv',
+) {
   logger.info('Seeding Neo4j database...');
 
   const driver = neo4j.driver(url, neo4j.auth.basic('neo4j', password), { });
@@ -44,27 +25,63 @@ export default async function injectGraph(graph: Graph, password: string, databa
     return;
   }
 
+  logger.info(`  Connected to Neo4j database at ${url} (${databaseName || 'neo4j'})`);
+
+  const nodesQuery = `
+  CALL apoc.periodic.iterate(
+    "LOAD CSV WITH HEADERS from '${nodesFile}' AS row RETURN row",
+    "CALL apoc.create.node(split(row[':LABEL'], ';'), {
+        id: row['id:ID'],
+        fullName: row.fullName,
+        simpleName: row.simpleName,
+        color: row.color,
+        dependencyProfileCategory: row.dependencyProfileCategory,
+        cohesion: toFloat(row.cohesion),
+        fileSizeKB: toInteger(row['fileSizeKB:INT']),
+        nrScreens: toInteger(row['nrScreens:INT']),
+        nrEntities: toInteger(row['nrEntities:INT']),
+        nrPublicElements: toInteger(row['nrPublicElements:INT']),
+        nrRESTConsumers: toInteger(row['nrRESTConsumers:INT']),
+        nrRESTProducers: toInteger(row['nrRESTProducers:INT'])
+    }) YIELD node RETURN count(*)",
+    { batchSize: 1000, parallel: true }
+  )`;
+
+  const edgesQuery = `
+  CALL apoc.periodic.iterate(
+    "LOAD CSV WITH HEADERS from '${edgesFile}' AS row RETURN row",
+    "MATCH (start WHERE start.id = row[':START_ID'])
+    MATCH (end WHERE end.id = row[':END_ID'])
+    CALL apoc.create.relationship(start, row[':TYPE'], {
+        id: row.id,
+        references: row.references,
+        dependencyTypes: row.dependencyTypes,
+        nrDependencies: toInteger(row['nrDependencies:INT']),
+        nrCalls: toInteger(row['nrCalls:INT'])
+    }, end) YIELD rel RETURN count(*)",
+    { batchSize: 1000, parallel: true }
+  )`;
+
   try {
-    await session.run(createQuery(graph));
-    logger.info('  Seeded entries');
-    await session.run(createQuery(getViolationsAsGraph()));
-    logger.info('  Seeded violations');
-    logger.info('  Seeded database');
+    logger.info('  Seed nodes...');
+    await session.run(nodesQuery);
+    logger.info('    Done!');
+
+    logger.info('  Seed relationships...');
+    await session.run(edgesQuery);
+    logger.info('    Done!');
   } catch (e) {
     console.error(`Could not inject graph: ${e}`);
+    throw e;
   } finally {
     await session.close();
     await driver.close();
   }
 }
 
-export function importGraphIntoNeo4j(neo4jHomeDir: string, databaseName = 'neo4j', nodesFile = 'nodes.csv', edgesFile = 'relationships.csv') {
-  if (!fs.existsSync(neo4jHomeDir)) {
-    throw new Error('Neo4j Home Directory cannot be found. See https://neo4j.com/docs/operations-manual/current/configuration/file-locations/ to find the path to your home directory.');
-  }
-  const executablePath = path.join(neo4jHomeDir, '/bin/neo4j-admin');
-  if (!fs.existsSync(executablePath) && !fs.existsSync(`${executablePath}.bat`) && !fs.existsSync(`${executablePath}.ps1`)) {
-    throw new Error('/bin/neo4j-admin cannot be found in the given Neo4j home directory');
+export function copyCsvDatasets(neo4jImportDir: string, nodesFile = 'nodes.csv', edgesFile = 'relationships.csv') {
+  if (!fs.existsSync(neo4jImportDir)) {
+    throw new Error('Neo4j Import Directory cannot be found. See https://neo4j.com/docs/operations-manual/current/configuration/file-locations/ to find the path to your home and thus import directory.');
   }
   if (!fs.existsSync(nodesFile)) {
     throw new Error(`${nodesFile} (containing all nodes) cannot be found on disk`);
@@ -72,8 +89,22 @@ export function importGraphIntoNeo4j(neo4jHomeDir: string, databaseName = 'neo4j
   if (!fs.existsSync(edgesFile)) {
     throw new Error(`${edgesFile} (containing all edges) cannot be found on disk`);
   }
-  fs.copyFileSync(nodesFile, path.join(neo4jHomeDir, '/import/nodes.csv'));
-  fs.copyFileSync(edgesFile, path.join(neo4jHomeDir, '/import/relationships.csv'));
+  fs.copyFileSync(nodesFile, path.join(neo4jImportDir, nodesFile));
+  fs.copyFileSync(edgesFile, path.join(neo4jImportDir, edgesFile));
+}
 
-  execSync(`${executablePath} database import full --overwrite-destination --nodes=import/nodes.csv --relationships=import/relationships.csv ${databaseName}`, { stdio: 'inherit' });
+export function injectGraphAdminTools(neo4jHomeDir: string, databaseName = 'neo4j', nodesFile = 'nodes.csv', edgesFile = 'relationships.csv') {
+  const executablePath = path.join(neo4jHomeDir, '/bin/neo4j-admin');
+  if (!fs.existsSync(executablePath) && !fs.existsSync(`${executablePath}.bat`) && !fs.existsSync(`${executablePath}.ps1`)) {
+    throw new Error('/bin/neo4j-admin cannot be found in the given Neo4j home directory');
+  }
+
+  if (!fs.existsSync(path.join(neo4jHomeDir, '/import', nodesFile))) {
+    throw new Error(`${nodesFile} (containing all nodes) cannot be found in the import directory`);
+  }
+  if (!fs.existsSync(path.join(neo4jHomeDir, '/import', edgesFile))) {
+    throw new Error(`${edgesFile} (containing all relationships) cannot be found in the import directory`);
+  }
+
+  execSync(`${executablePath} database import full --overwrite-destination --nodes=import/${nodesFile} --relationships=import/${edgesFile} ${databaseName}`, { stdio: 'inherit' });
 }

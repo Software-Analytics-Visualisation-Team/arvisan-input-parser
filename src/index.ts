@@ -2,7 +2,7 @@ import { program } from 'commander';
 import fs from 'fs';
 import getGraph from './parser';
 import { validateGraph } from './graph';
-import injectGraph, { importGraphIntoNeo4j } from './neo4j-inject';
+import { copyCsvDatasets, injectGraphAdminTools, injectGraphCypher } from './neo4j-inject';
 import logger from './logger';
 import graphToCsv from './csv';
 import { getViolationsAsGraph } from './violations';
@@ -19,12 +19,12 @@ const startTime = new Date();
 program
   .name('npm run transform')
   .description('Small tool to parse OutSystems architecture/dependency datasets into ')
-  .option('-s, --seedLocal <Neo4jHomeDir>', 'seed the resulting graph the Neo4j database, which can be found at the given Neo4j home directory')
+  .option('-s, --seedLocal <Neo4jHomeDir>', 'seed the resulting graph the Neo4j database using Neo4j Admin tools, which can be found at the given Neo4j home directory')
   .option('--database <name>', 'name of the Neo4j database, defaults to "neo4j"')
-  .option('--seedRemotePassword <password>', 'seed the resulting graph the Neo4j database, which can be accessed using the given password')
-  .option('--seedRemoteUrl <password>', 'seed the resulting graph the Neo4j database, which can be found at the given url (optional)')
+  .option('--seedQueryPassword <password>', 'seed the resulting graph the Neo4j database using a query, which can be accessed using the given password')
+  .option('--seedQueryImportDir <Neo4jImportDir>', 'seed the resulting graph the Neo4j database using a query, which has the following import directory')
+  .option('--seedQueryUrl <url>', 'seed the resulting graph the Neo4j database using a query, which can be found at the given url (optional)')
   .option('-j, --json', 'output the resulting graph as a .json file')
-  .option('-c, --csv', 'output the resulting graph as a .csv file with nodes and a .csv file with edges')
   .option('-l, --layer', 'include "layer" nodes in the resulting graph')
   .requiredOption('-g, --grouping <files>', 'location of domain (application group) and sublayer dataset(s)', groupInputFiles, [])
   .requiredOption('-d, --dependencies <files>', 'one or more locations of dependency dataset(s)', groupInputFiles, [])
@@ -65,20 +65,19 @@ if (options.json) {
   fs.writeFileSync('graph.json', JSON.stringify(graph, null, 4));
   logger.info('Graph written to .json file');
 }
-if (options.csv || options.seedLocal) {
-  const totalGraph: Graph = {
-    elements: {
-      nodes: [...graph.elements.nodes, ...violations.elements.nodes],
-      edges: [...graph.elements.edges, ...violations.elements.edges],
-    },
-  };
-  graphToCsv(totalGraph);
-  logger.info('Graph written to .csv files');
-}
+
+const totalGraph: Graph = {
+  elements: {
+    nodes: [...graph.elements.nodes, ...violations.elements.nodes],
+    edges: [...graph.elements.edges, ...violations.elements.edges],
+  },
+};
+graphToCsv(totalGraph);
+logger.info('Graph written to .csv files');
 
 if (options.seedLocal) {
   logger.info('Start seeding to Neo4j database...');
-  importGraphIntoNeo4j(options.seedLocal, options.database);
+  injectGraphAdminTools(options.seedLocal, options.database);
   logger.info('    Done!');
 }
 
@@ -87,8 +86,13 @@ function finish() {
   logger.info(`Tasks finished in ${Math.round(finishTime / 1000)}s. Exit.`);
 }
 
-if (options.seedRemotePassword) {
-  injectGraph(graph, options.seedRemotePassword, options.seedRemoteUrl).then(() => {
+if (options.seedQueryPassword && options.seedQueryImportDir) {
+  copyCsvDatasets(options.seedQueryImportDir);
+  injectGraphCypher(
+    options.seedQueryPassword,
+    options.database,
+    options.seedRemoteUrl,
+  ).then(() => {
     finish();
     process.exit(0);
   });
