@@ -1,4 +1,4 @@
-import { read, readFile, utils } from 'xlsx';
+import { read, utils } from 'xlsx';
 import {
   Edge, Graph, GraphLayers, Node,
 } from '../structure';
