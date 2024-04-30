@@ -176,6 +176,11 @@ export default class GraphPostProcessor extends RootParser {
           throw new Error(`Unknown graph layer: ${label}`);
       }
 
+      newNode.data.properties = {
+        ...n.data.properties,
+        simpleName: newNode.data.properties.simpleName,
+        fullName: newNode.data.properties.fullName,
+      };
       nodeIdMapping.set(n.data.id, newNode.data.id);
       return newNode;
     }).map((n) => {
