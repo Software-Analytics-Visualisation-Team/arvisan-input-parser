@@ -27,50 +27,44 @@ function removeDuplicates<T extends Node | Edge>(elements: T[]) {
 }
 
 /**
+ * Parse a multiple files read as buffers to a list of entries of the given type
+ */
+function parseFilesToEntries<T>(files: Buffer[]): T[] {
+  const workbooks = files.map((file) => read(file));
+  return workbooks
+    .map((workbook): T[] => utils
+      .sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]))
+    .flat();
+}
+
+/**
  * Parse the given files to a Neo4j / Cytoscape graph object
  * @param structureFiles Files containing the structure of the landscape
  * (domains, applications, sublayers, and modules).
- * @param dependencyFiles One or more files containing consumers and producers.
- * @param integrationFile Optional file containing dynamic data about integrations and service APIs.
- * @param detailsFiles Optional one or more files containing more details about modules.
+ * @param dependencyFiles Files containing consumers and producers.
+ * @param integrationFiles Files containing dynamic data about integrations and service APIs.
+ * @param detailsFiles Files containing more details about modules.
  * @param includeModuleLayerLayer Whether the "Layer" layer from the OutSystems Architecture Canvas
  * should be included in the resulting graph
  * @param anonymize Whether the output graph should be anonymized
  */
 export default function getGraph(
-  structureFiles: Buffer[],
-  dependencyFiles: Buffer[],
-  integrationFile?: Buffer,
+  structureFiles: Buffer[] = [],
+  dependencyFiles: Buffer[] = [],
+  integrationFiles: Buffer[] = [],
   detailsFiles: Buffer[] = [],
   includeModuleLayerLayer = false,
   anonymize = false,
 ): Graph {
   logger.info('Parsing files...');
 
-  const applicationWorkbooks = structureFiles.map((file) => read(file));
-  const applicationEntries: ApplicationGroupEntry[] = applicationWorkbooks
-    .map((workbook): ApplicationGroupEntry[] => utils
-      .sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]))
-    .flat();
+  const applicationEntries: ApplicationGroupEntry[] = parseFilesToEntries(structureFiles);
+  const consumerProducerEntries: ConsumerProducerEntry[] = parseFilesToEntries(dependencyFiles);
+  const dynamicDataEntries: IntegrationServiceAPIEntry[] = parseFilesToEntries(integrationFiles);
+  const moduleDetailsEntries: ModuleDetailsEntry[] = parseFilesToEntries(detailsFiles);
 
-  const consumerProducerWorkbooks = dependencyFiles.map((file) => read(file));
-  const consumerProducerEntries = consumerProducerWorkbooks
-    .map((workbook): ConsumerProducerEntry[] => utils
-      .sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]))
-    .flat();
-
-  const dynamicDataWorkbook = integrationFile ? read(integrationFile) : undefined;
-  const dynamicDataEntries: IntegrationServiceAPIEntry[] | undefined = dynamicDataWorkbook ? utils
-    .sheet_to_json(dynamicDataWorkbook.Sheets[dynamicDataWorkbook.SheetNames[0]]) : undefined;
   const integrationEntries = dynamicDataEntries ? dynamicDataEntries.filter((e) => e.logtype === 'Integration') : undefined;
   const serviceAPIEntries = dynamicDataEntries ? dynamicDataEntries.filter((e) => e.logtype === 'ServiceAPI') : undefined;
-
-  const moduleDetailsWorkbooks = detailsFiles.map((file) => read(file));
-  const moduleDetailsEntries = moduleDetailsWorkbooks
-    .map((workbook): ModuleDetailsEntry[] => utils
-      .sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]))
-    .flat();
-
   logger.info('    Done!');
 
   let modDetailsParser: ModuleDetailsParser | undefined;

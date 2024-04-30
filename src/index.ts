@@ -1,5 +1,6 @@
 import { program } from 'commander';
 import fs from 'fs';
+import path from 'node:path';
 import getGraph from './parser';
 import { validateGraph } from './graph';
 import { copyCsvDatasets, injectGraphAdminTools, injectGraphCypher } from './neo4j-inject';
@@ -26,10 +27,10 @@ program
   .option('--seedQueryUrl <url>', 'seed the resulting graph the Neo4j database using a query, which can be found at the given url (optional)')
   .option('-j, --json', 'output the resulting graph as a .json file')
   .option('-l, --layer', 'include "layer" nodes in the resulting graph')
-  .requiredOption('-g, --grouping <files>', 'location of domain (application group) and sublayer dataset(s)', groupInputFiles, [])
-  .requiredOption('-d, --dependencies <files>', 'one or more locations of dependency dataset(s)', groupInputFiles, [])
-  .option('-i, --integrations <file>', 'location of integration/service API dataset')
-  .option('-m, --moduleDetails <files>', 'one or more locations of module details dataset(s)', groupInputFiles, [])
+  .option('-g, --grouping <files>', 'locations of domain (application group) and sublayer dataset(s)', groupInputFiles, [])
+  .option('-d, --dependencies <files>', 'locations of dependency dataset(s)', groupInputFiles, [])
+  .option('-i, --integrations <files>', 'locations of integration/service API dataset(s)', groupInputFiles, [])
+  .option('-m, --moduleDetails <files>', 'locations of module details dataset(s)', groupInputFiles, [])
   .option('-a, --anonymize', 'output should be anonymized with');
 
 program.parse();
@@ -37,10 +38,10 @@ program.parse();
 const options = program.opts();
 
 logger.info('Reading files from disk...');
-const groupingData = options.grouping.map(readFileFromDisk);
-const dependencyFiles = options.dependencies.map(readFileFromDisk);
-const integrationFile = readFileFromDisk(options.integrations);
-const detailsFiles = options.moduleDetails.map(readFileFromDisk);
+const groupingData = options.grouping?.map(readFileFromDisk);
+const dependencyFiles = options.dependencies?.map(readFileFromDisk);
+const integrationFile = options.integrations?.map(readFileFromDisk);
+const detailsFiles = options.moduleDetails?.map(readFileFromDisk);
 logger.info('    Done!');
 
 const graph = getGraph(
@@ -77,6 +78,7 @@ logger.info('Graph written to .csv files');
 
 if (options.seedLocal) {
   logger.info('Start seeding to Neo4j database...');
+  copyCsvDatasets(path.join(options.seedLocal, '/import'));
   injectGraphAdminTools(options.seedLocal, options.database);
   logger.info('    Done!');
 }
