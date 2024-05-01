@@ -3,7 +3,7 @@ import {
   Edge, EdgeProperties, Graph, Node, NodeProperties,
 } from './structure';
 
-export function writeNodesToDisk(nodes: Node[], fileName = 'nodes.csv', header = true) {
+export function getCsvNodes(nodes: Node[], header = true): Buffer {
   const headers: ('id:ID' | ':LABEL' | keyof NodeProperties)[] = [
     'id:ID', ':LABEL', 'fullName', 'simpleName', 'color', 'dependencyProfileCategory', 'cohesion',
     // Optional properties
@@ -34,14 +34,18 @@ export function writeNodesToDisk(nodes: Node[], fileName = 'nodes.csv', header =
       return row;
     })
     .map((x) => x.join(','));
+
   if (header) {
-    fs.writeFileSync(fileName, [headers, ...rows].join('\r\n'));
-  } else {
-    fs.writeFileSync(fileName, rows.join('\r\n'));
+    return Buffer.from([headers, ...rows].join('\r\n'));
   }
+  return Buffer.from(rows.join('\r\n'));
 }
 
-export function writeEdgesToDisk(edges: Edge[], fileName = 'relationships.csv', header = true) {
+export function writeNodesToDisk(nodes: Node[], fileName = 'nodes.csv', header = true) {
+  fs.writeFileSync(fileName, getCsvNodes(nodes, header));
+}
+
+export function getCsvEdges(edges: Edge[], header = true): Buffer {
   const headers: ('id' | ':TYPE' | ':START_ID' | ':END_ID' | keyof EdgeProperties)[] = ['id', ':TYPE', ':START_ID', ':END_ID', 'references', 'dependencyTypes', 'nrDependencies:INT' as 'nrDependencies', 'nrCalls:INT' as 'nrCalls'];
   const rows = edges
     .map((n) => {
@@ -69,10 +73,13 @@ export function writeEdgesToDisk(edges: Edge[], fileName = 'relationships.csv', 
     .map((x) => x.join(','));
 
   if (header) {
-    fs.writeFileSync(fileName, [headers, ...rows].join('\r\n'));
-  } else {
-    fs.writeFileSync(fileName, rows.join('\r\n'));
+    return Buffer.from([headers, ...rows].join('\r\n'));
   }
+  return Buffer.from(rows.join('\r\n'));
+}
+
+export function writeEdgesToDisk(edges: Edge[], fileName = 'relationships.csv', header = true) {
+  fs.writeFileSync(fileName, getCsvEdges(edges, header));
 }
 
 export default function graphToCsv(graph: Graph, name?: string, header = true) {
