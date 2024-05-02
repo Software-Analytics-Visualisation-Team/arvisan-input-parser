@@ -1,6 +1,7 @@
 import {
   Edge, Graph, GraphLayers, Node, optionalModuleProperties, RelationshipLabel,
 } from './structure';
+import logger from './logger';
 
 /**
  * Helper function to check if a node exists
@@ -29,6 +30,7 @@ export function edgeExists(edges: Edge[], source: string, target: string) {
  * contain propagated module properties
  */
 export function validateGraph(graph: Graph, propagatedProperties = false) {
+  logger.info('Validating graph...');
   graph.elements.nodes.forEach((n, i, all) => {
     // Every node should have a unique ID
     if (all.filter((n2) => n2.data.id === n.data.id).length > 1) {
@@ -78,17 +80,6 @@ export function validateGraph(graph: Graph, propagatedProperties = false) {
       });
     });
 
-  // Check that every module has exactly one parent
-  // (which by the test above cannot be an application)
-  // graph.elements.nodes.filter((n) => n.data.id.startsWith('A_') && n.data.id.includes('__M_'))
-  //   .forEach((n) => {
-  //     const containmentEdges = graph.elements.edges
-  //       .filter((e) => e.data.label === RelationshipLabel.CONTAINS && e.data.target === n.data.id);
-  //     if (containmentEdges.length !== 1) {
-  //       throw new Error(`Did not find exactly one module containment edge for module "${n.data.id}", found ${containmentEdges.length} instead.`);
-  //     }
-  //   });
-
   // Check if all module properties are propagated correctly to higher layers, but only
   // if that should have happened (i.e. we have actually set such properties on the module
   // layer)
@@ -130,4 +121,5 @@ export function validateGraph(graph: Graph, propagatedProperties = false) {
       }
     }
   });
+  logger.info('    Done!');
 }

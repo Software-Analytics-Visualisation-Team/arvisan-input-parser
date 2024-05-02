@@ -3,6 +3,7 @@ import {
 } from '../structure';
 import logger from '../logger';
 import RootParser from './root-parser';
+import { validateGraph } from '../graph';
 
 /**
  * Parser that finalizes the given graph, such that it meets the output specification
@@ -14,11 +15,16 @@ export default class GraphPostProcessor extends RootParser {
     public dependencyEdges: Edge[],
     includeModuleLayerLayer: boolean,
     anonymize: boolean,
+    domainNames: string[] = [],
   ) {
     super(includeModuleLayerLayer);
 
     this.addNoDomainClassification();
     this.addManualModuleSublayerClassification();
+
+    if (domainNames) {
+      this.filterGraphByDomains(domainNames);
+    }
 
     if (anonymize) {
       this.anonymizeGraph();
@@ -157,6 +163,12 @@ export default class GraphPostProcessor extends RootParser {
     const nodeIdMapping = new Map<string, string>();
 
     this.nodes = this.nodes.map((n) => {
+      // Do not anonymize the no_domain node, as it is a parser-node.
+      if (n.data.properties.simpleName === unclassifiedDomainName) {
+        nodeIdMapping.set(n.data.id, n.data.id);
+        return n;
+      }
+
       const [label] = n.data.labels;
       let newNode: Node;
       switch (label) {
@@ -239,7 +251,7 @@ export default class GraphPostProcessor extends RootParser {
 
       const references = new Map<string, string[]>();
       e.data.properties.references.forEach((values, key) => {
-        references.set(key, values.map((v) => `Reference_${getIdNumber('reference')}`));
+        references.set(key, values.map(() => `Reference_${getIdNumber('reference')}`));
       });
 
       return {
@@ -258,5 +270,159 @@ export default class GraphPostProcessor extends RootParser {
 
     this.containEdges = this.containEdges.map(anonymizeEdge);
     this.dependencyEdges = this.dependencyEdges.map(anonymizeEdge);
+  }
+
+  private filterDuplicates<T extends Node | Edge>(e: T, index: number, all: T[]): boolean {
+    return index === all.findIndex((e2) => e.data.id === e2.data.id);
+  }
+
+  /**
+   * Find all leaf nodes of the given node
+   * @param node
+   * @private
+   */
+  private findLeaves(node: Node): Node[] {
+    const containEdges = this.containEdges.filter((e) => e.data.label === RelationshipLabel.CONTAINS
+      && e.data.source === node.data.id);
+    if (containEdges.length === 0) return [node];
+    const targetNodes = containEdges
+      .map((e) => this.nodes.find((n) => n.data.id === e.data.target))
+      .map((n) => {
+        if (n === undefined) {
+          throw new Error();
+        }
+        return n;
+      });
+    return targetNodes.map((n) => this.findLeaves(n)).flat();
+  }
+
+  /**
+   * Find all ancestors of the given nodes (including their edges),
+   * excluding the node itself.
+   * @param node
+   * @private
+   */
+  private findAncestorWithEdges(node: Node): { nodes: Node[], edges: Edge[] } {
+    const containEdge = this.containEdges.find((e) => e.data.label === RelationshipLabel.CONTAINS
+      && e.data.target === node.data.id);
+    if (!containEdge) return { nodes: [], edges: [] };
+
+    const parent = this.nodes.find((n) => n.data.id === containEdge.data.source);
+    if (!parent) throw new Error(`Node with ID "${containEdge.data.source}" not found`);
+
+    const { nodes, edges } = this.findAncestorWithEdges(parent);
+    return { nodes: [parent, ...nodes], edges: [containEdge, ...edges] };
+  }
+
+  /**
+   * Given a set of nodes, find all outgoing dependency edges and their target nodes
+   * that have not been seen before.
+   * @param modules
+   * @param seenEdgeIds
+   * @private
+   */
+  private findOutgoingDependenciesWithEdges(
+    modules: Node[],
+    seenEdgeIds: Set<string>,
+  ): { nodes: Node[], edges: Edge[] } {
+    const moduleIds = modules.map((n) => n.data.id);
+    const dependencyEdges = this.dependencyEdges
+      .filter((e) => e.data.label === RelationshipLabel.CALLS && moduleIds.includes(e.data.source))
+      .filter((e) => !seenEdgeIds.has(e.data.id));
+
+    if (dependencyEdges.length === 0) return { nodes: [], edges: [] };
+
+    const dependencyNodes = dependencyEdges
+      .map((e) => this.nodes.find((n) => n.data.id === e.data.target))
+      .map((n, i) => {
+        if (n === undefined) {
+          throw new Error(`Node with ID "${dependencyEdges[i].data.target}" not found`);
+        }
+        return n;
+      });
+    dependencyEdges.forEach((e) => seenEdgeIds.add(e.data.id));
+
+    const { nodes, edges } = this.findOutgoingDependenciesWithEdges(dependencyNodes, seenEdgeIds);
+    return { nodes: [...dependencyNodes, ...nodes], edges: [...dependencyEdges, ...edges] };
+  }
+
+  /**
+   * Given a set of nodes, find all incoming dependency edges and their target nodes
+   * that have not been seen before.
+   * @param modules
+   * @param seenEdgeIds
+   * @private
+   */
+  private findIncomingDependenciesWithEdges(
+    modules: Node[],
+    seenEdgeIds: Set<string>,
+  ): { nodes: Node[], edges: Edge[] } {
+    const moduleIds = modules.map((n) => n.data.id);
+    const dependencyEdges = this.dependencyEdges
+      .filter((e) => e.data.label === RelationshipLabel.CALLS && moduleIds.includes(e.data.target))
+      .filter((e) => !seenEdgeIds.has(e.data.id));
+
+    if (dependencyEdges.length === 0) return { nodes: [], edges: [] };
+
+    const dependencyNodes = dependencyEdges
+      .map((e) => this.nodes.find((n) => n.data.id === e.data.source))
+      .map((n, i) => {
+        if (n === undefined) {
+          throw new Error(`Node with ID "${dependencyEdges[i].data.source}" not found`);
+        }
+        return n;
+      });
+    dependencyEdges.forEach((e) => seenEdgeIds.add(e.data.id));
+
+    const { nodes, edges } = this.findOutgoingDependenciesWithEdges(dependencyNodes, seenEdgeIds);
+    return { nodes: [...dependencyNodes, ...nodes], edges: [...dependencyEdges, ...edges] };
+  }
+
+  /**
+   * Only keep the given domains and all their dependencies in the graph.
+   * Delete the rest
+   * @param domainNames
+   * @private
+   */
+  private filterGraphByDomains(domainNames: string[]) {
+    logger.info('Filter domains...');
+    const domainIds = domainNames.map((d) => this.getDomainId(d));
+    const domains = domainIds.map((d) => this.nodes.find((n) => n.data.id === d))
+      .map((d, i) => {
+        if (d === undefined) {
+          throw new Error(`Domain with ID "${domainIds[i]}" and name "${domainNames[i]}" not found`);
+        }
+        return d;
+      });
+
+    logger.info('  Find all domain leaves...');
+    const modules = domains.map((d) => this.findLeaves(d)).flat().filter(this.filterDuplicates);
+    logger.info('    Done!');
+    logger.info('  Find all nested dependencies...');
+    const {
+      nodes: outgoingNodes, edges: outgoingEdges,
+    } = this.findOutgoingDependenciesWithEdges(modules, new Set());
+    const {
+      nodes: incomingNodes, edges: incomingEdges,
+    } = this.findIncomingDependenciesWithEdges(modules, new Set());
+    const dependencyModules = outgoingNodes.concat(incomingNodes).filter(this.filterDuplicates);
+    const dependencyEdges = outgoingEdges.concat(incomingEdges).filter(this.filterDuplicates);
+    logger.info('    Done!');
+
+    logger.info('  Find all ancestors...');
+    const allModules = modules.concat(dependencyModules);
+    const ancestors = modules.concat(dependencyModules)
+      .map((n) => this.findAncestorWithEdges(n))
+      .reduce((sum, a) => ({
+        nodes: sum.nodes.concat(a.nodes),
+        edges: sum.edges.concat(a.edges),
+      }), { nodes: [], edges: [] });
+    const ancestorNodes = ancestors.nodes.filter(this.filterDuplicates);
+    const containEdges = ancestors.edges.filter(this.filterDuplicates);
+    logger.info('    Done!');
+
+    this.nodes = ancestorNodes.concat(allModules).filter(this.filterDuplicates);
+    this.dependencyEdges = dependencyEdges;
+    this.containEdges = containEdges;
   }
 }

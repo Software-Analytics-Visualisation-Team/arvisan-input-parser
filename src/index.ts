@@ -31,7 +31,8 @@ program
   .option('-d, --dependencies <files>', 'locations of dependency dataset(s)', groupInputFiles, [])
   .option('-i, --integrations <files>', 'locations of integration/service API dataset(s)', groupInputFiles, [])
   .option('-m, --moduleDetails <files>', 'locations of module details dataset(s)', groupInputFiles, [])
-  .option('-a, --anonymize', 'output should be anonymized with');
+  .option('-a, --anonymize', 'output should be anonymized with')
+  .option('-f, --filter <domainNames>', 'which domains to filter on', groupInputFiles, []);
 
 program.parse();
 
@@ -51,16 +52,15 @@ const graph = getGraph(
   detailsFiles,
   !!options.layer,
   !!options.anonymize,
+  options.filter,
 );
 const violations = getViolationsAsGraph();
 logger.info(`Generated LPG with ${graph.elements.nodes.length} nodes and ${graph.elements.edges.length} edges.`);
 
-logger.info('Validating graph...');
 // If we have at least one module details file, all nodes should have aggregates
 // of these numerical properties.
 const propagatedProperties = options.moduleDetails.length > 0;
 validateGraph(graph, propagatedProperties);
-logger.info('    Done!');
 
 if (options.json) {
   fs.writeFileSync('graph.json', JSON.stringify(graph, null, 4));
