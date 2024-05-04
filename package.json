@@ -6,7 +6,8 @@
   "scripts": {
     "transform": "tsc --noEmit && tsx src/index.ts",
     "lint": "eslint . --ext .ts",
-    "lint-fix": "eslint . --ext .ts --fix"
+    "lint-fix": "eslint . --ext .ts --fix",
+    "postinstall": "tsc --outDir ./dist"
   },
   "keywords": [],
   "author": "",
