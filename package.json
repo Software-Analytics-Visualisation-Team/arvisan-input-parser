@@ -2,12 +2,12 @@
   "name": "arvisan-input-parser",
   "version": "1.0.0",
   "description": "",
-  "main": "src/index.ts",
+  "main": "dist/index.js",
   "scripts": {
+    "build": "tsc",
     "transform": "tsc --noEmit && tsx src/index.ts",
     "lint": "eslint . --ext .ts",
-    "lint-fix": "eslint . --ext .ts --fix",
-    "postinstall": "tsc --outDir ./dist"
+    "lint-fix": "eslint . --ext .ts --fix"
   },
   "keywords": [],
   "author": "",
