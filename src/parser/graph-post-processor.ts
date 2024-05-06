@@ -22,7 +22,7 @@ export default class GraphPostProcessor extends RootParser {
     this.addNoDomainClassification();
     this.addManualModuleSublayerClassification();
 
-    if (domainNames) {
+    if (domainNames.length > 0) {
       this.filterGraphByDomains(domainNames);
     }
 
