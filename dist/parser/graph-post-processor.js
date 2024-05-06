@@ -17,7 +17,7 @@ class GraphPostProcessor extends root_parser_1.default {
         this.dependencyEdges = dependencyEdges;
         this.addNoDomainClassification();
         this.addManualModuleSublayerClassification();
-        if (domainNames) {
+        if (domainNames.length > 0) {
             this.filterGraphByDomains(domainNames);
         }
         if (anonymize) {
