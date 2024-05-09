@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.writeEdgesToDisk = exports.getCsvEdges = exports.writeNodesToDisk = exports.getCsvNodes = void 0;
+exports.writeMappingToDisk = exports.getCsvMapping = exports.writeEdgesToDisk = exports.getCsvEdges = exports.writeNodesToDisk = exports.getCsvNodes = void 0;
 const fs_1 = __importDefault(require("fs"));
 function getCsvNodes(nodes, header = true) {
     const headers = [
@@ -82,6 +82,16 @@ function writeEdgesToDisk(edges, fileName = 'relationships.csv', header = true) 
     fs_1.default.writeFileSync(fileName, getCsvEdges(edges, header));
 }
 exports.writeEdgesToDisk = writeEdgesToDisk;
+function getCsvMapping(map) {
+    const rows = [['from', 'to']];
+    map.forEach((value, key) => rows.push([key, value]));
+    return Buffer.from(rows.map((r) => r.join(',')).join('\r\n'));
+}
+exports.getCsvMapping = getCsvMapping;
+function writeMappingToDisk(map, fileName) {
+    fs_1.default.writeFileSync(fileName, getCsvMapping(map));
+}
+exports.writeMappingToDisk = writeMappingToDisk;
 function graphToCsv(graph, name, header = true) {
     writeNodesToDisk(graph.elements.nodes, name ? `${name}-nodes.csv` : undefined, header);
     writeEdgesToDisk(graph.elements.edges, name ? `${name}-relationships.csv` : undefined, header);

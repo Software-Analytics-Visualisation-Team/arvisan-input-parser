@@ -6,6 +6,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const structure_1 = require("../structure");
 const logger_1 = __importDefault(require("../logger"));
 const root_parser_1 = __importDefault(require("./root-parser"));
+const csv_1 = require("../csv");
 /**
  * Parser that finalizes the given graph, such that it meets the output specification
  */
@@ -232,6 +233,7 @@ class GraphPostProcessor extends root_parser_1.default {
         };
         this.containEdges = this.containEdges.map(anonymizeEdge);
         this.dependencyEdges = this.dependencyEdges.map(anonymizeEdge);
+        (0, csv_1.writeMappingToDisk)(nodeIdMapping, 'node-id-mapping.csv');
     }
     filterDuplicates(e, index, all) {
         return index === all.findIndex((e2) => e.data.id === e2.data.id);

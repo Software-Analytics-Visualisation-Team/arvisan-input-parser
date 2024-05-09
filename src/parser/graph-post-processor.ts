@@ -4,6 +4,7 @@ import {
 import logger from '../logger';
 import RootParser from './root-parser';
 import { validateGraph } from '../graph';
+import { writeMappingToDisk } from '../csv';
 
 /**
  * Parser that finalizes the given graph, such that it meets the output specification
@@ -270,6 +271,8 @@ export default class GraphPostProcessor extends RootParser {
 
     this.containEdges = this.containEdges.map(anonymizeEdge);
     this.dependencyEdges = this.dependencyEdges.map(anonymizeEdge);
+
+    writeMappingToDisk(nodeIdMapping, 'node-id-mapping.csv');
   }
 
   private filterDuplicates<T extends Node | Edge>(e: T, index: number, all: T[]): boolean {

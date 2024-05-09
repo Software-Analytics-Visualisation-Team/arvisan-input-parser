@@ -82,6 +82,16 @@ export function writeEdgesToDisk(edges: Edge[], fileName = 'relationships.csv', 
   fs.writeFileSync(fileName, getCsvEdges(edges, header));
 }
 
+export function getCsvMapping(map: Map<string, string>) {
+  const rows: string[][] = [['from', 'to']];
+  map.forEach((value, key) => rows.push([key, value]));
+  return Buffer.from(rows.map((r) => r.join(',')).join('\r\n'));
+}
+
+export function writeMappingToDisk(map: Map<string, string>, fileName: string) {
+  fs.writeFileSync(fileName, getCsvMapping(map));
+}
+
 export default function graphToCsv(graph: Graph, name?: string, header = true) {
   writeNodesToDisk(graph.elements.nodes, name ? `${name}-nodes.csv` : undefined, header);
   writeEdgesToDisk(graph.elements.edges, name ? `${name}-relationships.csv` : undefined, header);
