@@ -13,32 +13,34 @@
 /**
  * Dataset of dependencies between two modules.
  *
- * PrimaryKey: [Cons Application, Cons Espace, Prod Application, Prod Espace, Reference Name]
+ * PrimaryKey: [Cons_Application, Cons_Module, Prod_Application, Prod_Module, Reference_Name]
  * CLI option: --dependencies <files>
- * Required: yes
+ * Required: no
  */
 export interface ConsumerProducerEntry {
-    'Cons Application': string;
-    'Cons Espace': string;
-    'Prod Application': string;
-    'Prod Espace': string;
-    'Reference Kind': string;
-    'Reference Name': string;
+    'Cons_Application': string;
+    'Cons_Module': string;
+    'Prod_Application': string;
+    'Prod_Module': string;
+    'Reference_Name': string;
+    'Reference_Kind': string;
 }
 /**
  * Dataset of "containment" of modules within applications and applications within domains.
  *
  * Primary key: [ApplicationGroupName, ApplicationName, ModuleName]
- * CLI option: --grouping <file>
- * Required: yes
+ * CLI option: --grouping <files>
+ * Required: no
  */
 export interface ApplicationGroupEntry {
     /** Name of the functional domain */
-    ApplicationGroupName?: string;
-    ApplicationName: string;
+    Domain?: string;
+    /** Name of the application */
+    Application: string;
     /** Optional name of the sublayer, should be one of ./src/structure.ts::ModuleSublayer */
-    SubLayerName?: string;
-    ModuleName: string;
+    Layer?: string;
+    /** Name of the module */
+    Module: string;
 }
 /**
  * Dataset of dynamic data that summarizes API calls, both unregistered in OutSystems
@@ -46,7 +48,7 @@ export interface ApplicationGroupEntry {
  * their EndpointAndMethod and direction.
  *
  * Primary key: [ApplicationName, ModuleName, EndpointAndMethod].
- * CLI option: --integrations <file>
+ * CLI option: --integrations <files>
  * Required: no
  */
 export interface IntegrationServiceAPIEntry {
@@ -63,18 +65,18 @@ export interface IntegrationServiceAPIEntry {
  * multiple records of the same Consumer-Producer pairs (because of multiple
  * different dependencies).
  *
- * Primary key: [Application Name, Module Name]
- * CLI option: --moduleDetails
+ * Primary key: [ApplicationName, ModuleName]
+ * CLI option: --moduleDetails <files>
  * Required: no
  */
 export interface ModuleDetailsEntry {
-    'Application Name': string;
-    'Module Name': string;
-    'File Size KB': number;
-    'Count Screens': number;
-    'Count Entities': number;
-    'Count Public Elements': number;
-    'Count REST Consumer': number;
-    'Count REST Producer': number;
-    'Count BPT Process Def': number;
+    'ApplicationName': string;
+    'ModuleName': string;
+    'FileSizeKB': number;
+    'Count_Screens': number;
+    'Count_Entities': number;
+    'Count_PublicElements': number;
+    'Count_REST_Consumer': number;
+    'Count_REST_Producer': number;
+    'Count_BPTProcessDef': number;
 }

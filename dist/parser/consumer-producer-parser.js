@@ -11,15 +11,18 @@ class ConsumerProducerParser extends root_parser_1.default {
         super(includeModuleLayerLayer);
         const filteredServiceAPIEntries = serviceAPIEntries.filter((e) => e.logtype === 'ServiceAPI');
         consumerProducerEntries.forEach((entry) => {
-            const prodModuleNode = this.getApplicationAndModule(entry['Prod Application'], entry['Prod Espace']);
-            const consModuleNode = this.getApplicationAndModule(entry['Cons Application'], entry['Cons Espace']);
+            const prodModuleNode = this
+                .getApplicationAndModule(entry.Prod_Application, entry.Prod_Module);
+            const consModuleNode = this
+                .getApplicationAndModule(entry.Cons_Application, entry.Cons_Module);
             const dependencyEdgeId = `${consModuleNode.data.id}__${prodModuleNode.data.id}`;
             const dependencyEdge = this.getDependencyEdge(dependencyEdgeId);
-            const dependencyType = (0, outsystems_arch_canvas_1.consumerTypeToDependencyType)(entry['Reference Kind']);
+            const dependencyType = (0, outsystems_arch_canvas_1.consumerTypeToDependencyType)(entry.Reference_Kind);
             let nrCalls;
             if (dependencyType === structure_1.DependencyType.RUNTIME) {
                 nrCalls = 0;
-                const serviceAPIEntry = filteredServiceAPIEntries.find((e) => e.EndpointAndMethod === entry['Reference Name']);
+                const serviceAPIEntry = filteredServiceAPIEntries
+                    .find((e) => e.EndpointAndMethod === entry.Reference_Name);
                 if (serviceAPIEntry) {
                     nrCalls = serviceAPIEntry.count;
                 }
@@ -34,8 +37,9 @@ class ConsumerProducerParser extends root_parser_1.default {
                 if (dependencyEdge.data.properties.nrCalls != null && nrCalls) {
                     dependencyEdge.data.properties.nrCalls += nrCalls;
                 }
-                if (dependencyEdge.data.properties.references.has(entry['Reference Kind'])) {
-                    dependencyEdge.data.properties.references.get(entry['Reference Kind']).push(entry['Reference Name']);
+                if (dependencyEdge.data.properties.references.has(entry.Reference_Kind)) {
+                    dependencyEdge.data.properties.references.get(entry.Reference_Kind)
+                        .push(entry.Reference_Name);
                 }
                 dependencyEdge.data.properties.dependencyTypes?.push(dependencyType);
             }
@@ -47,7 +51,7 @@ class ConsumerProducerParser extends root_parser_1.default {
                         target: prodModuleNode.data.id,
                         label: structure_1.RelationshipLabel.CALLS,
                         properties: {
-                            references: new Map().set(entry['Reference Kind'], [entry['Reference Name']]),
+                            references: new Map().set(entry.Reference_Kind, [entry.Reference_Name]),
                             dependencyTypes: [dependencyType],
                             nrDependencies: 1,
                             nrCalls,

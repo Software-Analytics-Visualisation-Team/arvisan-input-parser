@@ -1,4 +1,4 @@
-import { DependencyType, GraphLayers, RelationshipLabel } from '../structure';
+import { DependencyType, RelationshipLabel } from '../structure';
 import { ConsumerProducerEntry, IntegrationServiceAPIEntry } from '../input-spec';
 import { consumerTypeToDependencyType } from './outsystems-arch-canvas';
 import RootParser from './root-parser';
@@ -14,17 +14,20 @@ export default class ConsumerProducerParser extends RootParser {
     const filteredServiceAPIEntries = serviceAPIEntries.filter((e) => e.logtype === 'ServiceAPI');
 
     consumerProducerEntries.forEach((entry) => {
-      const prodModuleNode = this.getApplicationAndModule(entry['Prod Application'], entry['Prod Espace']);
-      const consModuleNode = this.getApplicationAndModule(entry['Cons Application'], entry['Cons Espace']);
+      const prodModuleNode = this
+        .getApplicationAndModule(entry.Prod_Application, entry.Prod_Module);
+      const consModuleNode = this
+        .getApplicationAndModule(entry.Cons_Application, entry.Cons_Module);
 
       const dependencyEdgeId = `${consModuleNode.data.id}__${prodModuleNode.data.id}`;
       const dependencyEdge = this.getDependencyEdge(dependencyEdgeId);
 
-      const dependencyType = consumerTypeToDependencyType(entry['Reference Kind']);
+      const dependencyType = consumerTypeToDependencyType(entry.Reference_Kind);
       let nrCalls: number | undefined;
       if (dependencyType === DependencyType.RUNTIME) {
         nrCalls = 0;
-        const serviceAPIEntry = filteredServiceAPIEntries.find((e) => e.EndpointAndMethod === entry['Reference Name']);
+        const serviceAPIEntry = filteredServiceAPIEntries
+          .find((e) => e.EndpointAndMethod === entry.Reference_Name);
         if (serviceAPIEntry) {
           nrCalls = serviceAPIEntry.count;
         } else {
@@ -39,8 +42,9 @@ export default class ConsumerProducerParser extends RootParser {
         if (dependencyEdge.data.properties.nrCalls != null && nrCalls) {
           dependencyEdge.data.properties.nrCalls += nrCalls;
         }
-        if (dependencyEdge.data.properties.references.has(entry['Reference Kind'])) {
-          dependencyEdge.data.properties.references.get(entry['Reference Kind'])!.push(entry['Reference Name']);
+        if (dependencyEdge.data.properties.references.has(entry.Reference_Kind)) {
+          dependencyEdge.data.properties.references.get(entry.Reference_Kind)!
+            .push(entry.Reference_Name);
         }
         dependencyEdge.data.properties.dependencyTypes?.push(dependencyType);
       } else if (dependencyEdge == null) {
@@ -51,7 +55,7 @@ export default class ConsumerProducerParser extends RootParser {
             target: prodModuleNode.data.id,
             label: RelationshipLabel.CALLS,
             properties: {
-              references: new Map().set(entry['Reference Kind'], [entry['Reference Name']]),
+              references: new Map().set(entry.Reference_Kind, [entry.Reference_Name]),
               dependencyTypes: [dependencyType],
               nrDependencies: 1,
               nrCalls,

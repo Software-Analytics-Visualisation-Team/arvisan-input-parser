@@ -30,6 +30,7 @@ export function consumerTypeToDependencyType(kind: string): DependencyType {
     case 'FlowExceptionHandlingFlow': return DependencyType.COMPILE_TIME;
     case 'ServiceAPIMethod': return DependencyType.RUNTIME;
     case 'Process': return DependencyType.COMPILE_TIME;
+    case 'WebFlow': return DependencyType.COMPILE_TIME;
 
     case 'Integration': return DependencyType.RUNTIME; // Does not exist in OutSystems consumer-producer datasets,
       // but is included here for completeness’s sake. The integration dataset should be provided

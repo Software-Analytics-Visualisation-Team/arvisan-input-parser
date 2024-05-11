@@ -1,7 +1,7 @@
 import RootParser from './root-parser';
 import { ModuleDetailsEntry } from '../input-spec';
 import {
-  Edge, GraphLayers, Node, NodePropertiesDetails, optionalModuleProperties, RelationshipLabel,
+  Edge, Node, NodePropertiesDetails, optionalModuleProperties, RelationshipLabel,
 } from '../structure';
 
 export default class ModuleDetailsParser extends RootParser {
@@ -54,14 +54,14 @@ export default class ModuleDetailsParser extends RootParser {
     super(includeModuleLayerLayer);
 
     entries.forEach((e) => {
-      const moduleNode = this.getApplicationAndModule(e['Application Name'], e['Module Name']);
+      const moduleNode = this.getApplicationAndModule(e.ApplicationName, e.ModuleName);
 
-      moduleNode.data.properties.fileSizeKB = e['File Size KB'];
-      moduleNode.data.properties.nrScreens = e['Count Screens'];
-      moduleNode.data.properties.nrEntities = e['Count Entities'];
-      moduleNode.data.properties.nrPublicElements = e['Count Public Elements'];
-      moduleNode.data.properties.nrRESTConsumers = e['Count REST Consumer'];
-      moduleNode.data.properties.nrRESTProducers = e['Count REST Producer'];
+      moduleNode.data.properties.fileSizeKB = e.FileSizeKB;
+      moduleNode.data.properties.nrScreens = e.Count_Screens;
+      moduleNode.data.properties.nrEntities = e.Count_Entities;
+      moduleNode.data.properties.nrPublicElements = e.Count_PublicElements;
+      moduleNode.data.properties.nrRESTConsumers = e.Count_REST_Consumer;
+      moduleNode.data.properties.nrRESTProducers = e.Count_REST_Producer;
     });
   }
 

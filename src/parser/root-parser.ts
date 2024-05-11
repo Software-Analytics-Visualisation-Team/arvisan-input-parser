@@ -166,7 +166,7 @@ export default class RootParser {
    */
   public createDomainNode(domainName: string): Node {
     // If this entry is empty, skip this entry
-    if (domainName === '') throw new Error('No domain name defined');
+    if (domainName === '' || domainName == null) throw new Error('No domain name defined');
 
     // Create the ID. Skip this entry if the node already exists
     const id = this.getDomainId(domainName);
@@ -192,7 +192,7 @@ export default class RootParser {
    */
   protected createApplicationNode(applicationName: string): Node {
     // If this entry is empty, skip this entry
-    if (applicationName === '') throw new Error('No application name defined');
+    if (applicationName === '' || applicationName == null) throw new Error('No application name defined');
 
     // Create the ID. Skip this entry if the node already exists
     const id = this.getApplicationId(applicationName);
@@ -219,7 +219,7 @@ export default class RootParser {
    */
   protected createModuleNode(applicationName: string, moduleName: string): Node {
     // If this entry is empty, skip this entry
-    if (moduleName === '') throw new Error('No module name defined');
+    if (moduleName === '' || moduleName == null) throw new Error('No module name defined');
 
     // Create the ID. Skip this entry if the node already exists
     const id = this.getModuleId(applicationName, moduleName);

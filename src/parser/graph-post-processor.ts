@@ -3,7 +3,6 @@ import {
 } from '../structure';
 import logger from '../logger';
 import RootParser from './root-parser';
-import { validateGraph } from '../graph';
 import { writeMappingToDisk } from '../csv';
 
 /**

@@ -47,13 +47,13 @@ class ModuleDetailsParser extends root_parser_1.default {
     constructor(entries, includeModuleLayerLayer) {
         super(includeModuleLayerLayer);
         entries.forEach((e) => {
-            const moduleNode = this.getApplicationAndModule(e['Application Name'], e['Module Name']);
-            moduleNode.data.properties.fileSizeKB = e['File Size KB'];
-            moduleNode.data.properties.nrScreens = e['Count Screens'];
-            moduleNode.data.properties.nrEntities = e['Count Entities'];
-            moduleNode.data.properties.nrPublicElements = e['Count Public Elements'];
-            moduleNode.data.properties.nrRESTConsumers = e['Count REST Consumer'];
-            moduleNode.data.properties.nrRESTProducers = e['Count REST Producer'];
+            const moduleNode = this.getApplicationAndModule(e.ApplicationName, e.ModuleName);
+            moduleNode.data.properties.fileSizeKB = e.FileSizeKB;
+            moduleNode.data.properties.nrScreens = e.Count_Screens;
+            moduleNode.data.properties.nrEntities = e.Count_Entities;
+            moduleNode.data.properties.nrPublicElements = e.Count_PublicElements;
+            moduleNode.data.properties.nrRESTConsumers = e.Count_REST_Consumer;
+            moduleNode.data.properties.nrRESTProducers = e.Count_REST_Producer;
         });
     }
     /**

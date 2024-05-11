@@ -1,6 +1,6 @@
 import RootParser from './root-parser';
 import { IntegrationServiceAPIEntry } from '../input-spec';
-import { DependencyType, GraphLayers, RelationshipLabel } from '../structure';
+import { DependencyType, RelationshipLabel } from '../structure';
 
 export default class IntegrationParser extends RootParser {
   /**
