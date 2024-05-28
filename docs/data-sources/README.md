@@ -8,7 +8,7 @@ The four different datasets are described below. For the actual input specificat
 also consult [the input specifications in the source code](../../src/input-spec.ts).
 This file contains the names of all columns each dataset should have, both required and optional.
 
-## Consumer-Producer dataset
+## Consumer-Producer (dependency) dataset
 This dataset contains information about the actual OutSystems dependencies between different modules and can be
 extracted from the OutSystems internal database.
 To do so, please run the query as defined in [OSdata_GetConsumerProducer.sql](OSdata_GetConsumerProducer.sql).
@@ -28,7 +28,7 @@ Note that when you use multiple OutSystems environments, you need to run the que
 The input data parser will merge all these datasets into a single graph, but application and module names need
 to be unique across environments.
 
-## Application group dataset
+## Application group (Structure) dataset
 This dataset contains the grouping of applications into functional domains and modules into layers.
 The data can be taken from [Discovery](https://www.outsystems.com/forge/component-overview/409/discovery-o11) or a
 different tool that classifies modules into functional domains and/or layers.
