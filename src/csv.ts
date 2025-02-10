@@ -5,8 +5,9 @@ import {
 
 export function getCsvNodes(nodes: Node[], header = true): Buffer {
   const headers: ('id:ID' | ':LABEL' | keyof NodeProperties)[] = [
-    'id:ID', ':LABEL', 'fullName', 'simpleName', 'color', 'dependencyProfileCategory', 'cohesion',
+    'id:ID', ':LABEL', 'fullName', 'simpleName', 'color', 'nodeProperties', 
     // Optional properties
+    'dependencyProfileCategory', 'cohesion',
     'fileSizeKB:INT' as 'fileSizeKB', 'nrScreens:INT' as 'nrScreens', 'nrEntities:INT' as 'nrEntities',
     'nrPublicElements:INT' as 'nrPublicElements', 'nrRESTConsumers:INT' as 'nrRESTConsumers', 'nrRESTProducers:INT' as 'nrRESTProducers',
   ];
@@ -17,9 +18,10 @@ export function getCsvNodes(nodes: Node[], header = true): Buffer {
       n.data.properties.fullName,
       n.data.properties.simpleName,
       n.data.properties.color,
+      // Optional properties
+      n.data.properties.nodeProperties,
       n.data.properties.dependencyProfileCategory,
       n.data.properties.cohesion,
-      // Optional properties
       n.data.properties.fileSizeKB,
       n.data.properties.nrScreens,
       n.data.properties.nrEntities,

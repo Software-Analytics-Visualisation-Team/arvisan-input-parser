@@ -75,6 +75,7 @@ export type NodeProperties = NodePropertiesDetails & {
   fullName: string;
   simpleName: string;
   color: string;
+  nodeProperties: string;
 
   // Metrics
   dependencyProfileCategory: ModuleDependencyProfileCategory;
