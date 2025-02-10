@@ -1,4 +1,5 @@
 /// <reference types="node" />
+/// <reference types="node" />
 import { Graph } from '../structure';
 /**
  * Parse the given files to a Neo4j / Cytoscape graph object

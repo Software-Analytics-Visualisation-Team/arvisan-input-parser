@@ -14,6 +14,7 @@ function createSublayerNodes(layer, sublayers) {
                 fullName: getName(sublayer),
                 simpleName: getName(sublayer),
                 color: structure_1.moduleColors[layer],
+                nodeProperties: '',
                 dependencyProfileCategory: structure_1.ModuleDependencyProfileCategory.NONE,
                 cohesion: -1,
             },

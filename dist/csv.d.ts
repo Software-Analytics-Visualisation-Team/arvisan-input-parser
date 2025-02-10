@@ -1,4 +1,5 @@
 /// <reference types="node" />
+/// <reference types="node" />
 import { Edge, Graph, Node } from './structure';
 export declare function getCsvNodes(nodes: Node[], header?: boolean): Buffer;
 export declare function writeNodesToDisk(nodes: Node[], fileName?: string, header?: boolean): void;
