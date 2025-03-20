@@ -44,6 +44,7 @@ export async function injectGraphCypher(
         fullName: row.fullName,
         simpleName: row.simpleName,
         color: row.color,
+        nodeProperties: row.nodeProperties,
         dependencyProfileCategory: row.dependencyProfileCategory,
         cohesion: toFloat(row.cohesion),
         fileSizeKB: toInteger(row['fileSizeKB:INT']),
