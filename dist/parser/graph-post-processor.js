@@ -64,9 +64,6 @@ class GraphPostProcessor extends root_parser_1.default {
                 // We already have a sublayer edge, so no need to create a new one.
                 return undefined;
             }
-            if (moduleNode.data.properties.simpleName == null) {
-                console.log('break');
-            }
             // No sublayer edge has been found, so we need to create one
             const { layer: moduleLayer, sublayer: moduleSublayer, } = this.moduleSuffixToLayers(moduleNode.data.properties.simpleName);
             const applicationId = moduleContainmentEdges[0].data.source;

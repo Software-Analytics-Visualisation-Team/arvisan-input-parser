@@ -28,7 +28,7 @@ export interface ConsumerProducerEntry {
 /**
  * Dataset of "containment" of modules within applications and applications within domains.
  *
- * Primary key: [ApplicationGroupName, ApplicationName, ModuleName]
+ * Primary key: [Application, Module]
  * CLI option: --grouping <files>
  * Required: no
  */

@@ -7,8 +7,9 @@ exports.writeMappingToDisk = exports.getCsvMapping = exports.writeEdgesToDisk = 
 const fs_1 = __importDefault(require("fs"));
 function getCsvNodes(nodes, header = true) {
     const headers = [
-        'id:ID', ':LABEL', 'fullName', 'simpleName', 'color', 'dependencyProfileCategory', 'cohesion',
+        'id:ID', ':LABEL', 'fullName', 'simpleName', 'color', 'nodeProperties',
         // Optional properties
+        'dependencyProfileCategory', 'cohesion',
         'fileSizeKB:INT', 'nrScreens:INT', 'nrEntities:INT',
         'nrPublicElements:INT', 'nrRESTConsumers:INT', 'nrRESTProducers:INT',
     ];
@@ -19,9 +20,10 @@ function getCsvNodes(nodes, header = true) {
         n.data.properties.fullName,
         n.data.properties.simpleName,
         n.data.properties.color,
+        // Optional properties
+        n.data.properties.nodeProperties,
         n.data.properties.dependencyProfileCategory,
         n.data.properties.cohesion,
-        // Optional properties
         n.data.properties.fileSizeKB,
         n.data.properties.nrScreens,
         n.data.properties.nrEntities,
