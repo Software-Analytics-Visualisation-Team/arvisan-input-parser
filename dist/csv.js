@@ -49,7 +49,7 @@ function writeNodesToDisk(nodes, fileName = 'nodes.csv', header = true) {
 }
 exports.writeNodesToDisk = writeNodesToDisk;
 function getCsvEdges(edges, header = true) {
-    const headers = ['id', ':TYPE', ':START_ID', ':END_ID', 'references', 'dependencyTypes', 'nrDependencies:INT', 'nrCalls:INT'];
+    const headers = ['id', ':TYPE', ':START_ID', ':END_ID', 'references', 'dependencyTypes', 'nrDependencies:INT', 'nrCalls:INT', 'edgeProperties'];
     const rows = edges
         .map((n) => {
         const references = {};
@@ -61,6 +61,7 @@ function getCsvEdges(edges, header = true) {
             n.data.label.toUpperCase(),
             n.data.source,
             n.data.target,
+            n.data.properties.edgeProperties,
             `"${JSON.stringify(references).replaceAll('"', '""')}"`,
             n.data.properties.dependencyTypes?.join('|'),
             n.data.properties.nrDependencies,

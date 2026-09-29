@@ -64,6 +64,7 @@ class IntegrationParser extends root_parser_1.default {
                         target: prodModuleNode.data.id,
                         label: structure_1.RelationshipLabel.CALLS,
                         properties: {
+                            edgeProperties: '',
                             references: new Map().set('Integration', [consumer.EndpointAndMethod]),
                             dependencyTypes: [structure_1.DependencyType.RUNTIME],
                             nrDependencies: 1,

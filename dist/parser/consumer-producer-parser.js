@@ -51,6 +51,7 @@ class ConsumerProducerParser extends root_parser_1.default {
                         target: prodModuleNode.data.id,
                         label: structure_1.RelationshipLabel.CALLS,
                         properties: {
+                            edgeProperties: '',
                             references: new Map().set(entry.Reference_Kind, [entry.Reference_Name]),
                             dependencyTypes: [dependencyType],
                             nrDependencies: 1,

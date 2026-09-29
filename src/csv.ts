@@ -5,7 +5,7 @@ import {
 
 export function getCsvNodes(nodes: Node[], header = true): Buffer {
   const headers: ('id:ID' | ':LABEL' | keyof NodeProperties)[] = [
-    'id:ID', ':LABEL', 'fullName', 'simpleName', 'color', 'nodeProperties', 
+    'id:ID', ':LABEL', 'fullName', 'simpleName', 'color', 'nodeProperties',
     // Optional properties
     'dependencyProfileCategory', 'cohesion',
     'fileSizeKB:INT' as 'fileSizeKB', 'nrScreens:INT' as 'nrScreens', 'nrEntities:INT' as 'nrEntities',
@@ -48,7 +48,7 @@ export function writeNodesToDisk(nodes: Node[], fileName = 'nodes.csv', header =
 }
 
 export function getCsvEdges(edges: Edge[], header = true): Buffer {
-  const headers: ('id' | ':TYPE' | ':START_ID' | ':END_ID' | keyof EdgeProperties)[] = ['id', ':TYPE', ':START_ID', ':END_ID', 'references', 'dependencyTypes', 'nrDependencies:INT' as 'nrDependencies', 'nrCalls:INT' as 'nrCalls'];
+  const headers: ('id' | ':TYPE' | ':START_ID' | ':END_ID' | keyof EdgeProperties)[] = ['id', ':TYPE', ':START_ID', ':END_ID', 'references', 'dependencyTypes', 'nrDependencies:INT' as 'nrDependencies', 'nrCalls:INT' as 'nrCalls', 'edgeProperties'];
   const rows = edges
     .map((n) => {
       const references: Record<string, string[]> = {};
@@ -60,6 +60,7 @@ export function getCsvEdges(edges: Edge[], header = true): Buffer {
         n.data.label.toUpperCase(),
         n.data.source,
         n.data.target,
+        n.data.properties.edgeProperties,
         `"${JSON.stringify(references).replaceAll('"', '""')}"`,
         n.data.properties.dependencyTypes?.join('|'),
         n.data.properties.nrDependencies,

@@ -231,6 +231,7 @@ class RootParser {
                             source: applicationNode.data.id,
                             target: layerNode.data.id,
                             properties: {
+                                edgeProperties: '',
                                 references: new Map(),
                             },
                             label: structure_1.RelationshipLabel.CONTAINS,
@@ -277,6 +278,7 @@ class RootParser {
                             source: layerNode ? layerNode.data.id : applicationNode.data.id,
                             target: subLayerNode.data.id,
                             properties: {
+                                edgeProperties: '',
                                 references: new Map(),
                             },
                             label: structure_1.RelationshipLabel.CONTAINS,
@@ -305,6 +307,7 @@ class RootParser {
                 target: target.data.id,
                 label: structure_1.RelationshipLabel.CONTAINS,
                 properties: {
+                    edgeProperties: '',
                     references: new Map(),
                 },
             },

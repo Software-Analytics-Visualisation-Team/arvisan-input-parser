@@ -274,6 +274,7 @@ export default class RootParser {
               source: applicationNode.data.id,
               target: layerNode.data.id,
               properties: {
+                edgeProperties: '',
                 references: new Map(),
               },
               label: RelationshipLabel.CONTAINS,
@@ -317,6 +318,7 @@ export default class RootParser {
               source: layerNode ? layerNode.data.id : applicationNode.data.id,
               target: subLayerNode.data.id,
               properties: {
+                edgeProperties: '',
                 references: new Map(),
               },
               label: RelationshipLabel.CONTAINS,
@@ -349,6 +351,7 @@ export default class RootParser {
         target: target.data.id,
         label: RelationshipLabel.CONTAINS,
         properties: {
+          edgeProperties: '',
           references: new Map(),
         },
       },
