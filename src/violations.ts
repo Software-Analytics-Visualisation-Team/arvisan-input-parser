@@ -32,20 +32,6 @@ function createSublayerNodes(layer: ModuleLayers, sublayers: string[]): Node[] {
   }));
 }
 
-function createLayerViolationEdges(sublayersFrom: string[], sublayersTo: string[]): Edge[] {
-  return sublayersFrom.map((from) => sublayersTo.map((to): Edge => ({
-    data: {
-      id: `${getName(from)}-${getName(to)}`,
-      label: RelationshipLabel.VIOLATES,
-      source: getName(from),
-      target: getName(to),
-      properties: {
-        references: new Map(),
-      },
-    },
-  }))).flat();
-}
-
 function createSublayerViolationEdges(sublayers: ModuleSublayer[]): Edge[] {
   return sublayers.map((to, index): Edge[] => sublayers
     .slice(index + 1).map((from): Edge => ({
@@ -55,6 +41,7 @@ function createSublayerViolationEdges(sublayers: ModuleSublayer[]): Edge[] {
         source: getName(from),
         target: getName(to),
         properties: {
+          edgeProperties: '',
           references: new Map(),
         },
       },

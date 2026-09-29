@@ -5,7 +5,7 @@ import {
 
 export function getCsvNodes(nodes: Node[], header = true): Buffer {
   const headers: ('id:ID' | ':LABEL' | keyof NodeProperties)[] = [
-    'id:ID', ':LABEL', 'fullName', 'simpleName', 'color', 'nodeProperties', 
+    'id:ID', ':LABEL', 'fullName', 'simpleName', 'color', 'nodeProperties',
     // Optional properties
     'dependencyProfileCategory', 'cohesion',
     'fileSizeKB:INT' as 'fileSizeKB', 'nrScreens:INT' as 'nrScreens', 'nrEntities:INT' as 'nrEntities',
@@ -60,6 +60,7 @@ export function getCsvEdges(edges: Edge[], header = true): Buffer {
         n.data.label.toUpperCase(),
         n.data.source,
         n.data.target,
+        n.data.properties.edgeProperties,
         `"${JSON.stringify(references).replaceAll('"', '""')}"`,
         n.data.properties.dependencyTypes?.join('|'),
         n.data.properties.nrDependencies,
