@@ -69,7 +69,7 @@ function validateGraph(graph, propagatedProperties = false) {
         const containmentEdges = graph.elements.edges
             .filter((e) => e.data.label === structure_1.RelationshipLabel.CONTAINS && e.data.source === n.data.id);
         containmentEdges.forEach((edge) => {
-            const target = graph.elements.nodes.find((n) => n.data.id === edge.data.target);
+            const target = graph.elements.nodes.find((m) => m.data.id === edge.data.target);
             if (!target) {
                 throw new Error(`Target node "${edge.data.target}" of edge "${edge.data.id}" cannot be found.`);
             }

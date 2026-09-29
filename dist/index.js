@@ -20,7 +20,7 @@ function groupInputFiles(newFile, allFiles) {
 const startTime = new Date();
 commander_1.program
     .name('npm run transform')
-    .description('Small tool to parse OutSystems architecture/dependency datasets into ')
+    .description('Small tool to parse architecture/dependency datasets into Neo4j data')
     .option('-s, --seedLocal <Neo4jHomeDir>', 'seed the resulting graph the Neo4j database using Neo4j Admin tools, which can be found at the given Neo4j home directory')
     .option('--database <name>', 'name of the Neo4j database, defaults to "neo4j"')
     .option('--seedQueryPassword <password>', 'seed the resulting graph the Neo4j database using a query, which can be accessed using the given password')

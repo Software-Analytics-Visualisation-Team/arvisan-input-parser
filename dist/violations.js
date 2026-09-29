@@ -21,19 +21,6 @@ function createSublayerNodes(layer, sublayers) {
         },
     }));
 }
-function createLayerViolationEdges(sublayersFrom, sublayersTo) {
-    return sublayersFrom.map((from) => sublayersTo.map((to) => ({
-        data: {
-            id: `${getName(from)}-${getName(to)}`,
-            label: structure_1.RelationshipLabel.VIOLATES,
-            source: getName(from),
-            target: getName(to),
-            properties: {
-                references: new Map(),
-            },
-        },
-    }))).flat();
-}
 function createSublayerViolationEdges(sublayers) {
     return sublayers.map((to, index) => sublayers
         .slice(index + 1).map((from) => ({
@@ -43,6 +30,7 @@ function createSublayerViolationEdges(sublayers) {
             source: getName(from),
             target: getName(to),
             properties: {
+                edgeProperties: '',
                 references: new Map(),
             },
         },

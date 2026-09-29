@@ -61,6 +61,7 @@ function getCsvEdges(edges, header = true) {
             n.data.label.toUpperCase(),
             n.data.source,
             n.data.target,
+            n.data.properties.edgeProperties,
             `"${JSON.stringify(references).replaceAll('"', '""')}"`,
             n.data.properties.dependencyTypes?.join('|'),
             n.data.properties.nrDependencies,
