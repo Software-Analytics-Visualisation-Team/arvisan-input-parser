@@ -48,7 +48,7 @@ export function writeNodesToDisk(nodes: Node[], fileName = 'nodes.csv', header =
 }
 
 export function getCsvEdges(edges: Edge[], header = true): Buffer {
-  const headers: ('id' | ':TYPE' | ':START_ID' | ':END_ID' | keyof EdgeProperties)[] = ['id', ':TYPE', ':START_ID', ':END_ID', 'references', 'dependencyTypes', 'nrDependencies:INT' as 'nrDependencies', 'nrCalls:INT' as 'nrCalls'];
+  const headers: ('id' | ':TYPE' | ':START_ID' | ':END_ID' | keyof EdgeProperties)[] = ['id', ':TYPE', ':START_ID', ':END_ID', 'references', 'dependencyTypes', 'nrDependencies:INT' as 'nrDependencies', 'nrCalls:INT' as 'nrCalls', 'edgeProperties'];
   const rows = edges
     .map((n) => {
       const references: Record<string, string[]> = {};
