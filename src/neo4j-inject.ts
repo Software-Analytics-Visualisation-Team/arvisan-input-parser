@@ -64,7 +64,7 @@ export async function injectGraphCypher(
     MATCH (end WHERE end.id = row[':END_ID'])
     CALL apoc.create.relationship(start, row[':TYPE'], {
         id: row.id,
-        nodeProperties: row.edgeProperties,
+        edgeProperties: row.edgeProperties,
         references: row.references,
         dependencyTypes: row.dependencyTypes,
         nrDependencies: toInteger(row['nrDependencies:INT']),
